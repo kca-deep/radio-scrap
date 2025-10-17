@@ -1,307 +1,386 @@
-# Radio Policy Magazine - Implementation Plan
+# Radio Policy Magazine - Implementation Plan (Revised)
 
-## Legacy 프로세스 분석
+## 워크플로우
 
-### 1단계: 데이터 수집
-- Excel 파일 입력: `YYYYMMDD_policysearching.xlsx`
-- 컬럼: title, date, link, content, source
+### 1단계: 웹 스크랩
+- URL 목록 Excel 업로드 (title, date, link, source)
+- Firecrawl API로 각 URL 스크랩 (markdown + metadata)
+- 첨부파일 자동 다운로드
+- 원문 → SQLite 저장 (status: scraped)
 
-### 2단계: GPT 리라이팅
-- OpenAI API 호출 (gpt-4o / gpt-5)
-- 영문 기사 → 한글 제목/본문 변환
-- 최근 N일 필터링
-- 월간 종합 요약 생성
-- 출력: `YYYYMMDD_HHMMSS_rewritten.xlsx` (Articles, Recent, Monthly 시트)
+### 2단계: GPT 번역
+- 스크랩된 기사 선택
+- GPT API로 영문 → 한글 번역 (제목/본문)
+- 번역문 → SQLite 업데이트 (status: translated)
 
-### 3단계: HTML 시각화
-- Jinja2 템플릿 렌더링
-- 국가별 필터링 (KR/US/UK/JP)
-- 출력: `YYYYMMDD_HHMMSS_mag.html`
+### 3단계: 퍼블리싱
+- 번역 완료 기사 선택
+- HTML 매거진 생성 (Jinja2 템플릿)
+- 이메일 발송 또는 다운로드
 
 ---
 
-## Next.js + FastAPI 아키텍처
+## 기술 스택
 
-### 기술 스택
-- Frontend: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS v4, shadcn/ui
+- Frontend: Next.js 15, React 19, TypeScript, Tailwind CSS v4, shadcn/ui
 - Backend: FastAPI, Python 3.11+
-- API: OpenAI GPT-4o/GPT-5
+- API: Firecrawl, OpenAI GPT-4o
+- Database: SQLite
 - Data: pandas, openpyxl
+- Email: SMTP / SendGrid
 - State: React Query, Zustand
-- Storage: 로컬 파일 시스템 (MVP), SQLite (메타데이터)
 
 ---
 
 ## 디렉토리 구조
 
 ```
-/app (Next.js)
-  /api
-    /[...fastapi]          # FastAPI 프록시
-  /upload                  # 파일 업로드 페이지
-  /process/[jobId]         # 처리 상태 페이지
-  /magazine/[jobId]        # 매거진 뷰어
+/app
+  /scrape              # 스크랩 관리
+  /articles            # 기사 관리 (테이블 뷰)
+  /translate/[jobId]   # 번역 진행 상태
+  /publish             # 퍼블리싱 (선택/미리보기/발송)
+  /magazine/[id]       # 매거진 뷰어
   /components
-    /ui                    # shadcn/ui 컴포넌트
-    FileUploader.tsx
-    ArticleCard.tsx
-    ProcessingStatus.tsx
-    CountryFilter.tsx
-    SummarySection.tsx
-    DateRangeFilter.tsx
+    /ui                # shadcn/ui
+    URLUploader.tsx
+    ScrapeStatus.tsx
+    ArticleTable.tsx
+    TranslateStatus.tsx
+    PublishForm.tsx
+    MagazineViewer.tsx
   /lib
-    api-client.ts          # FastAPI 호출 함수
-    types.ts               # TypeScript 타입 정의
+    api-client.ts
+    types.ts
 
 /backend
   /app
-    main.py                # FastAPI 앱 진입점
-    /api
-      /routes
-        upload.py          # POST /upload
-        process.py         # POST /process, GET /status/{job_id}
-        articles.py        # GET /articles, GET /summary/{job_id}
-        export.py          # GET /export/{job_id}
-      /services
-        excel_parser.py    # Excel 파싱
-        gpt_rewriter.py    # GPT 리라이팅
-        summarizer.py      # 월간 요약 생성
-        country_mapper.py  # 국가별 그룹핑
-        job_manager.py     # 작업 상태 추적
-        export_service.py  # Excel 출력
-      /models
-        article.py         # Pydantic 모델
-        job.py             # Job 상태 모델
-      /utils
-        openai_client.py   # OpenAI API 래퍼
+    main.py
+    /api/routes
+      scrape.py        # POST /scrape/upload, /scrape/start, GET /scrape/status/{job_id}
+      articles.py      # GET /articles, GET /articles/{id}, PATCH /articles/{id}
+      attachments.py   # GET /attachments/{id}/download
+      translate.py     # POST /translate/start, GET /translate/status/{job_id}
+      publish.py       # POST /publish/html, /publish/email, GET /publish/{id}
+    /services
+      firecrawl_service.py
+      scraper.py
+      translator.py
+      db_service.py
+      html_generator.py
+      email_service.py
+      country_mapper.py
+    /models
+      article.py
+      scrape_job.py
+      publication.py
+    /templates
+      magazine.html    # Jinja2 템플릿
+    database.db        # SQLite
     /storage
-      /uploads             # 업로드 파일
-      /results             # 처리 결과
+      /attachments     # 다운로드된 첨부파일
 ```
 
 ---
 
 ## API 엔드포인트
 
-### FastAPI Backend
-
 | Method | Endpoint | 설명 |
 |--------|----------|------|
-| POST | `/api/upload` | Excel 업로드, 파싱, 검증 → job_id 반환 |
-| POST | `/api/process` | GPT 리라이팅 시작 (백그라운드) |
-| GET | `/api/status/{job_id}` | 처리 진행 상태 (SSE) |
-| GET | `/api/articles` | 처리된 기사 목록 (필터: country, date_from, date_to) |
-| GET | `/api/summary/{job_id}` | 월간 종합 요약 |
-| GET | `/api/export/{job_id}` | Excel 다운로드 |
-
-### Next.js Frontend
-
-| Route | 페이지 |
-|-------|--------|
-| `/upload` | 파일 업로드 UI |
-| `/process/[jobId]` | 처리 진행 상태 (진행률, 로그) |
-| `/magazine/[jobId]` | 매거진 뷰어 (필터링, 카드 뷰) |
+| POST | `/api/scrape/upload` | URL 목록 Excel 업로드 → job_id |
+| POST | `/api/scrape/start` | Firecrawl 스크랩 시작 (백그라운드) |
+| GET | `/api/scrape/status/{job_id}` | 스크랩 진행 상태 (SSE) |
+| GET | `/api/articles` | 기사 목록 (필터: country, status, date) + attachments |
+| GET | `/api/articles/{id}` | 기사 상세 + attachments |
+| PATCH | `/api/articles/{id}` | 기사 수정 |
+| GET | `/api/attachments/{id}/download` | 첨부파일 다운로드 |
+| POST | `/api/translate/start` | 선택 기사들 번역 시작 |
+| GET | `/api/translate/status/{job_id}` | 번역 진행 상태 (SSE) |
+| POST | `/api/publish/html` | 선택 기사들 HTML 생성 → publication_id |
+| POST | `/api/publish/email` | 이메일 발송 (recipients, publication_id) |
+| GET | `/api/publish/{id}` | 퍼블리시된 매거진 HTML |
 
 ---
 
-## 핵심 모듈 매핑 (Legacy → FastAPI)
+## 데이터베이스 스키마
 
-### 1. excel_parser.py
-```
-load_df() → parse_excel_articles()
-- 컬럼 검증: title, date, link, content, source
-- 날짜 파싱: pd.to_datetime()
-- 반환: List[Article]
-```
-
-### 2. gpt_rewriter.py
-```
-gpt_rewrite() → rewrite_article()
-- SYSTEM_PROMPT 유지 (한글 리라이팅 규칙)
-- chat_create() 래퍼 (gpt-4o, gpt-5 호환)
-- 비동기 처리: async def + httpx.AsyncClient
-- parse_block() → 제목/본문 추출
-```
-
-### 3. summarizer.py
-```
-policy_summary_all() → generate_monthly_summary()
-- filter_recent_articles(days=45)
-- 월간 요약 프롬프트 (국가별 1-2개 핵심 정책)
-- 반환: str (한 문단)
+### articles
+```sql
+CREATE TABLE articles (
+  id TEXT PRIMARY KEY,
+  url TEXT UNIQUE NOT NULL,
+  title TEXT,
+  title_ko TEXT,
+  content TEXT,
+  content_ko TEXT,
+  source TEXT,
+  country_code TEXT,  -- KR/US/UK/JP
+  published_date DATE,
+  scraped_at TIMESTAMP,
+  translated_at TIMESTAMP,
+  status TEXT  -- scraped/translated
+);
 ```
 
-### 4. country_mapper.py
-```
-to_group_code() → map_country_code()
-- source 필드 → KR/US/UK/JP 매핑
-- FCC/NTIA → US
-- Ofcom → UK
-- 総務省/MIC → JP
-- 과기정통부 → KR
-```
-
-### 5. job_manager.py (신규)
-```
-jobs: Dict[str, JobStatus] = {}
-- create_job() → UUID 생성
-- update_progress(job_id, progress, message)
-- get_status(job_id) → JobStatus
-- SSE 이벤트 발행
+### attachments
+```sql
+CREATE TABLE attachments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  article_id TEXT,
+  filename TEXT,
+  file_path TEXT,
+  file_url TEXT,
+  downloaded_at TIMESTAMP,
+  FOREIGN KEY (article_id) REFERENCES articles(id)
+);
 ```
 
-### 6. export_service.py (신규)
+### scrape_jobs
+```sql
+CREATE TABLE scrape_jobs (
+  job_id TEXT PRIMARY KEY,
+  status TEXT,  -- pending/processing/completed/failed
+  total_urls INTEGER,
+  processed_urls INTEGER,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP
+);
 ```
-generate_excel(articles, summary)
-- Articles 시트: 전체 기사
-- Recent 시트: 최근 N일
-- Monthly 시트: 종합 요약
-- openpyxl 서식 적용 (줄바꿈, 열너비)
+
+### publications
+```sql
+CREATE TABLE publications (
+  id TEXT PRIMARY KEY,
+  title TEXT,
+  article_ids TEXT,  -- JSON array
+  html_path TEXT,
+  created_at TIMESTAMP,
+  sent_at TIMESTAMP
+);
 ```
 
 ---
 
-## 데이터 모델
+## 핵심 서비스
 
-### Article (Pydantic)
+### 1. firecrawl_service.py
+```python
+async def scrape_url(url: str) -> dict:
+    # Firecrawl API 호출
+    # 반환: {markdown, metadata, links}
+
+async def download_attachments(url: str, selectors: list) -> list:
+    # 첨부파일 다운로드
+    # 반환: [{filename, file_path, file_url}]
+```
+
+### 2. scraper.py
+```python
+async def process_url_list(job_id: str, urls: list):
+    for url in urls:
+        content = await firecrawl_service.scrape_url(url)
+        attachments = await firecrawl_service.download_attachments(url)
+        article = Article(url=url, content=content['markdown'], ...)
+        db_service.save_article(article)
+        db_service.save_attachments(article.id, attachments)
+        update_job_progress(job_id)
+```
+
+### 3. translator.py
+```python
+async def translate_article(article: Article) -> Article:
+    # legacy gpt_rewrite() 로직 이식
+    # SYSTEM_PROMPT 유지
+    title_ko, content_ko = await gpt_translate(article.title, article.content)
+    article.title_ko = title_ko
+    article.content_ko = content_ko
+    article.status = "translated"
+    return article
+```
+
+### 4. db_service.py
+```python
+def save_article(article: Article):
+    # SQLite INSERT/UPDATE
+
+def save_attachments(article_id: str, attachments: list[dict]):
+    # INSERT INTO attachments
+
+def get_articles(filters: dict) -> list[Article]:
+    # SELECT articles with JOIN attachments
+    # 각 Article 객체에 attachments 포함
+
+def get_article_by_id(id: str) -> Article:
+    # SELECT with attachments
+
+def update_article(id: str, updates: dict):
+    # UPDATE
+```
+
+### 5. html_generator.py
+```python
+def generate_magazine(article_ids: list[str]) -> str:
+    articles = db_service.get_articles_by_ids(article_ids)
+    # 각 article에 attachments 포함
+    # legacy Jinja2 템플릿 재사용
+    # 템플릿에서 첨부파일 링크 표시
+    html = template.render(articles=articles, ...)
+    publication_id = save_publication(html)
+    return publication_id, html
+```
+
+### 6. email_service.py
+```python
+def send_html_email(recipients: list[str], html: str, subject: str):
+    # SMTP 또는 SendGrid API
+    msg = MIMEMultipart()
+    msg.attach(MIMEText(html, 'html'))
+    smtp.send(msg)
+```
+
+### 7. country_mapper.py
+```python
+def map_country_code(source: str) -> str:
+    # legacy to_group_code() 로직 유지
+    # FCC/NTIA → US, Ofcom → UK, 総務省 → JP, 과기정통부 → KR
+```
+
+---
+
+## Pydantic 모델
+
+### Attachment
+```python
+class Attachment(BaseModel):
+    id: int
+    article_id: str
+    filename: str
+    file_path: str
+    file_url: str
+    downloaded_at: datetime
+```
+
+### Article
 ```python
 class Article(BaseModel):
     id: str
+    url: str
     title: str
-    date: date
-    link: str
-    content: str
-    source: str
-    source_raw: str
     title_ko: str | None
+    content: str
     content_ko: str | None
-    country_code: str | None  # KR/US/UK/JP
+    source: str
+    country_code: str | None
+    published_date: date | None
+    scraped_at: datetime
+    translated_at: datetime | None
+    status: Literal["scraped", "translated"]
+    attachments: list[Attachment] = []  # 첨부파일 목록
 ```
 
-### JobStatus
+### ScrapeJob
 ```python
-class JobStatus(BaseModel):
+class ScrapeJob(BaseModel):
     job_id: str
     status: Literal["pending", "processing", "completed", "failed"]
-    progress: int  # 0-100
-    total_articles: int
-    processed_articles: int
-    message: str
+    total_urls: int
+    processed_urls: int
     created_at: datetime
     updated_at: datetime
+```
+
+### Publication
+```python
+class Publication(BaseModel):
+    id: str
+    title: str
+    article_ids: list[str]
+    html_path: str
+    created_at: datetime
+    sent_at: datetime | None
 ```
 
 ---
 
 ## 처리 플로우
 
-### 1. 파일 업로드
+### 1. 스크랩
 ```
-User → POST /api/upload (Excel)
-  → parse_excel_articles()
-  → save to /storage/uploads/{job_id}.xlsx
-  → return {job_id, total_articles}
+User → POST /api/scrape/upload (Excel with URLs)
+  → Parse URLs → Save to scrape_jobs
+  → return {job_id, total_urls}
+
+User → POST /api/scrape/start {job_id}
+  → BackgroundTasks.add_task(scraper.process_url_list)
+  → for each URL:
+      - Firecrawl scrape
+      - Download attachments
+      - Save to articles (status: scraped)
+      - Update scrape_job progress
+  → Send SSE events
 ```
 
-### 2. GPT 리라이팅 (비동기)
+### 2. 번역
 ```
-User → POST /api/process {job_id}
-  → BackgroundTasks.add_task(process_articles, job_id)
-  → for article in articles:
-      - rewrite_article(article)
-      - update_progress(job_id, i/total * 100)
-      - sleep(1)  # rate limit
-  → generate_monthly_summary()
-  → save to /storage/results/{job_id}.json
-  → update_status("completed")
+User → POST /api/translate/start {article_ids}
+  → BackgroundTasks.add_task(translate_articles)
+  → for each article:
+      - translator.translate_article()
+      - db_service.update_article(status: translated)
+      - Update progress
+  → Send SSE events
 ```
 
-### 3. 진행 상태 모니터링
+### 3. 퍼블리싱
 ```
-User → GET /api/status/{job_id} (SSE)
-  → yield job_status every 1s
-```
+User → POST /api/publish/html {article_ids, title}
+  → db_service.get_articles_by_ids(article_ids)  # attachments 포함
+  → html_generator.generate_magazine()
+  → 템플릿에서 각 기사의 첨부파일 링크 렌더링
+  → Save to publications
+  → return {publication_id, html}
 
-### 4. 매거진 뷰어
-```
-User → GET /api/articles?job_id={job_id}&country=KR&date_from=2025-09-01
-  → load from /storage/results/{job_id}.json
-  → filter by country, date
-  → return List[Article]
-```
+User → POST /api/publish/email {publication_id, recipients, subject}
+  → email_service.send_html_email()
+  → Update publications.sent_at
 
-### 5. Excel 다운로드
-```
-User → GET /api/export/{job_id}
-  → generate_excel()
-  → return FileResponse
+User → GET /api/attachments/{id}/download
+  → FileResponse(file_path)
 ```
 
 ---
 
-## 프론트엔드 컴포넌트
+## 프론트엔드 페이지
 
-### 1. FileUploader
-- drag & drop 업로드
-- Excel 검증 (.xlsx)
-- shadcn/ui: button, input, card
+### /scrape
+- URLUploader: Excel 업로드
+- ScrapeStatus: 진행률, 성공/실패 로그 (SSE)
+- shadcn/ui: button, card, progress, badge
 
-### 2. ProcessingStatus
-- 진행률 표시 (progress bar)
-- 실시간 로그 (SSE 연결)
-- shadcn/ui: progress, badge, card
+### /articles
+- ArticleTable: 제목, 날짜, 국가, 상태, 첨부파일 수 컬럼
+- 필터: 국가, 번역 상태, 날짜 범위
+- 일괄 선택 → "번역 시작" 버튼
+- 개별 편집 버튼 → 모달 (첨부파일 목록 표시)
+- shadcn/ui: table, checkbox, dialog, select, badge
 
-### 3. ArticleCard
-- 제목, 날짜, 국가, 본문 요약
-- 원문 링크
-- shadcn/ui: card, typography
+### /translate/[jobId]
+- TranslateStatus: 진행률, 현재 번역 중인 기사
+- shadcn/ui: progress, card
 
-### 4. CountryFilter
-- All / 한국 / 미국 / 영국 / 일본
-- 탭 또는 사이드바
-- shadcn/ui: tabs or sidebar
+### /publish
+- 번역 완료 기사 목록 (체크박스)
+- HTML 미리보기 버튼
+- 이메일 설정: 수신자, 제목
+- 다운로드 / 발송 버튼
+- shadcn/ui: checkbox, input, textarea, button
 
-### 5. SummarySection
-- 월간 종합 요약 (최상단)
-- shadcn/ui: alert, card
-
-### 6. DateRangeFilter
-- 시작일, 종료일 선택
-- shadcn/ui: date-picker
-
----
-
-## 상태 관리
-
-### React Query
-```typescript
-useQuery(['articles', jobId, filters])
-useQuery(['summary', jobId])
-useMutation(uploadFile)
-useMutation(startProcessing)
-```
-
-### Zustand (필터 상태)
-```typescript
-interface FilterStore {
-  country: string | null
-  dateFrom: Date | null
-  dateTo: Date | null
-  setCountry: (country: string | null) => void
-  setDateRange: (from: Date | null, to: Date | null) => void
-}
-```
-
-### SSE (실시간 진행 상태)
-```typescript
-useEffect(() => {
-  const eventSource = new EventSource(`/api/status/${jobId}`)
-  eventSource.onmessage = (e) => {
-    const status = JSON.parse(e.data)
-    setProgress(status.progress)
-  }
-}, [jobId])
-```
+### /magazine/[id]
+- MagazineViewer: 생성된 HTML 표시
+- 각 기사마다 첨부파일 링크 표시
+- 첨부파일 다운로드 버튼
+- 국가별 필터 탭
+- shadcn/ui: tabs, card, button, link
 
 ---
 
@@ -314,66 +393,60 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 ### .env (FastAPI)
 ```
+FIRECRAWL_API_KEY=fc-...
 OPENAI_API_KEY=sk-...
-UPLOAD_DIR=/app/storage/uploads
-RESULT_DIR=/app/storage/results
-RECENT_DAYS=45
-```
-
-### CORS 설정 (FastAPI)
-```python
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+DATABASE_URL=sqlite:///./database.db
+ATTACHMENT_DIR=./storage/attachments
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=...
+SMTP_PASSWORD=...
 ```
 
 ---
 
 ## 개발 순서
 
-1. Backend 초기 설정
-   - FastAPI 프로젝트 구조 생성
-   - OpenAI 클라이언트 래퍼
-   - Excel 파싱 모듈
+1. **Backend 기본 구조**
+   - FastAPI 프로젝트 생성
+   - SQLite 스키마 생성
+   - Pydantic 모델
 
-2. 핵심 비즈니스 로직
-   - gpt_rewriter.py (legacy 이식)
-   - summarizer.py (legacy 이식)
-   - country_mapper.py
+2. **스크랩 기능**
+   - Firecrawl API 통합
+   - URL 파싱 및 DB 저장
+   - 첨부파일 다운로드
+   - SSE 진행 상태
 
-3. API 엔드포인트
-   - upload, process, status (SSE)
-   - articles, summary, export
+3. **번역 기능**
+   - legacy gpt_rewriter 이식
+   - 비동기 처리
+   - DB 업데이트
 
-4. Frontend 기본 구조
-   - shadcn/ui 설정
+4. **퍼블리싱 기능**
+   - HTML 생성 (Jinja2)
+   - 이메일 발송 (SMTP)
+
+5. **Frontend 기본 구조**
    - 페이지 라우팅
    - API 클라이언트
+   - shadcn/ui 컴포넌트
 
-5. UI 컴포넌트
-   - FileUploader
-   - ProcessingStatus (SSE 연결)
-   - ArticleCard, CountryFilter
+6. **UI 구현**
+   - URLUploader, ScrapeStatus
+   - ArticleTable (필터링, 편집)
+   - PublishForm, MagazineViewer
 
-6. 매거진 뷰어
-   - 필터링 로직
-   - 페이지네이션
-   - Excel 다운로드
-
-7. 테스트 및 최적화
+7. **테스트 & 최적화**
+   - Firecrawl rate limit 처리
    - GPT API 에러 핸들링
-   - rate limit 처리
-   - 대용량 파일 처리
+   - 대용량 스크랩 처리
 
 ---
 
-## 배포 고려사항
+## 배포
 
-- Next.js: Vercel (환경변수 설정)
+- Next.js: Vercel
 - FastAPI: Docker + Cloud Run / Railway
-- 파일 저장소: S3 / GCS (로컬 파일 시스템 대체)
-- 작업 큐: Redis + Celery (스케일링 시)
-- DB: PostgreSQL (메타데이터 영속화)
+- SQLite: 볼륨 마운트 또는 PostgreSQL 마이그레이션
+- 첨부파일: S3 / GCS
