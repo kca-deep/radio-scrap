@@ -1,0 +1,38 @@
+# Core Framework
+fastapi==0.115.13
+uvicorn[standard]==0.34.0
+pydantic==2.10.6
+pydantic-settings==2.7.1
+
+# Database
+aiosqlite==0.20.0
+alembic==1.14.0
+greenlet==3.2.4
+sqlalchemy==2.0.36
+
+# API Integration
+httpx==0.28.1
+openai==1.59.8
+# firecrawl-py - PyPI에서 사용 가능한 버전이 없음, Phase 2에서 httpx로 직접 구현
+
+# Data Processing
+pandas==2.2.3
+openpyxl==3.1.5
+python-multipart==0.0.20
+
+# Templates & Email
+jinja2==3.1.5
+aiosmtplib==3.0.2
+email-validator==2.2.0
+
+# Utilities
+python-dotenv==1.0.1
+python-jose[cryptography]==3.3.0
+bcrypt==4.2.1
+
+# Development Tools
+pytest==8.3.4
+pytest-asyncio==0.25.2
+black==24.10.0
+ruff==0.8.5
+mypy==1.14.1
