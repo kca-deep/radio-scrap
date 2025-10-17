@@ -31,8 +31,9 @@ class Settings(BaseSettings):
     SMTP_USER: str
     SMTP_PASSWORD: str
 
-    # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    # CORS - Load from environment variable (JSON array string)
+    # Example: CORS_ORIGINS='["http://localhost:3000","http://localhost:3001"]'
+    CORS_ORIGINS: List[str]
 
     # App
     DEBUG: bool = True

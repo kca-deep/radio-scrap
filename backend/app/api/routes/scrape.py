@@ -145,8 +145,20 @@ async def start_scrape(
 
     logger.info(f"Starting scrape job {request.job_id} with {len(url_items)} URLs")
 
-    # Add scraping task to background
-    background_tasks.add_task(scraper.process_url_list, request.job_id, url_items, db)
+    # Add scraping task to background with wrapper to create new session
+    async def scrape_with_new_session():
+        """Wrapper to create a new database session for background task."""
+        from app.database import AsyncSessionLocal
+        async with AsyncSessionLocal() as session:
+            try:
+                await scraper.process_url_list(request.job_id, url_items, session)
+                await session.commit()
+            except Exception as e:
+                logger.error(f"Scraping job {request.job_id} failed: {e}", exc_info=True)
+                await session.rollback()
+                raise
+
+    background_tasks.add_task(scrape_with_new_session)
 
     return SuccessResponse(
         message="Scraping started",

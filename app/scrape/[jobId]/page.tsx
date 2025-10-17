@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSSE } from '@/lib/hooks/use-sse';
 import { ScrapeProgressEvent } from '@/lib/types';
@@ -8,10 +8,11 @@ import ScrapeProgress from '@/components/scrape/scrape-progress';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 
-export default function ScrapeProgressPage({ params }: { params: { jobId: string } }) {
+export default function ScrapeProgressPage({ params }: { params: Promise<{ jobId: string }> }) {
+  const { jobId } = use(params);
   const router = useRouter();
   const { events, isConnected, error } = useSSE<ScrapeProgressEvent>(
-    `/api/scrape/stream/${params.jobId}`,
+    `/api/scrape/stream/${jobId}`,
     {
       onComplete: () => {
         console.log('Scraping completed!');
@@ -33,7 +34,7 @@ export default function ScrapeProgressPage({ params }: { params: { jobId: string
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Scraping Progress</h1>
             <p className="text-muted-foreground mt-2">
-              Job ID: <span className="font-mono text-sm">{params.jobId}</span>
+              Job ID: <span className="font-mono text-sm">{jobId}</span>
             </p>
           </div>
           <Button

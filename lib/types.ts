@@ -48,7 +48,8 @@ export interface Article {
   status: ArticleStatus;
   scraped_at: string;
   translated_at?: string;
-  attachments: Attachment[];
+  attachments?: Attachment[];
+  attachments_count?: number;
 }
 
 export interface Attachment {

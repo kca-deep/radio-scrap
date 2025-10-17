@@ -58,5 +58,7 @@ class ArticleList(BaseModel):
     published_date: date | None
     status: StatusEnum
     scraped_at: datetime
+    translated_at: datetime | None = None
+    attachments_count: int = 0
 
     model_config = {"from_attributes": True}

@@ -3,9 +3,9 @@ Excel file parser for URL list uploads.
 Extracts article metadata (title, date, link, source) from Excel files.
 """
 import logging
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import pandas as pd
 from pydantic import BaseModel, HttpUrl, field_validator
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class URLItem(BaseModel):
     """Parsed URL item from Excel."""
     title: str
-    date: Optional[date] = None
+    date: Union[date, datetime, None] = None
     link: HttpUrl
     source: str
 

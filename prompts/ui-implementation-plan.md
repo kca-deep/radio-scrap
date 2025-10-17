@@ -564,25 +564,25 @@ export default function ScrapeProgressPage({ params }: { params: { jobId: string
 ## 4. 구현 순서
 
 ### Phase 1: 기본 설정 (1-2시간)
-1. [ ] shadcn/ui 컴포넌트 설치
+1. [x] shadcn/ui 컴포넌트 설치
    ```bash
    npx shadcn@latest add button card table badge progress input select
    npx shadcn@latest add alert dropdown-menu dialog toast
    ```
 
-2. [ ] `lib/types.ts` 작성
-3. [ ] `lib/api-client.ts` 작성
-4. [ ] `lib/hooks/use-sse.ts` 작성
-5. [ ] `.env.local` 설정
+2. [x] `lib/types.ts` 작성
+3. [x] `lib/api-client.ts` 작성
+4. [x] `lib/hooks/use-sse.ts` 작성
+5. [x] `.env.local` 설정
    ```
    NEXT_PUBLIC_API_URL=http://localhost:8000
    ```
 
 ### Phase 2: 스크랩 UI (2-3시간)
-6. [ ] `components/scrape/excel-uploader.tsx` 구현
-7. [ ] `app/scrape/page.tsx` 구현
-8. [ ] `components/scrape/scrape-progress.tsx` 구현
-9. [ ] `app/scrape/[jobId]/page.tsx` 구현
+6. [x] `components/scrape/excel-uploader.tsx` 구현
+7. [x] `app/scrape/page.tsx` 구현
+8. [x] `components/scrape/scrape-progress.tsx` 구현
+9. [x] `app/scrape/[jobId]/page.tsx` 구현
 10. [ ] 실제 Excel 파일로 테스트
 
 ### Phase 3: 기사 관리 UI (3-4시간)
@@ -618,16 +618,16 @@ export default function ScrapeProgressPage({ params }: { params: { jobId: string
 
 ### 우선순위 높음 (필수)
 - [x] `button` - 모든 페이지에서 사용
-- [ ] `card` - 콘텐츠 그룹화
-- [ ] `table` - 기사 목록, URL 목록
-- [ ] `badge` - 상태 표시 (scraped, translated)
-- [ ] `progress` - 진행률 표시
-- [ ] `input` - 검색, 폼 입력
-- [ ] `select` - 필터 (국가, 상태)
-- [ ] `alert` - 에러/성공 메시지
+- [x] `card` - 콘텐츠 그룹화
+- [x] `table` - 기사 목록, URL 목록
+- [x] `badge` - 상태 표시 (scraped, translated)
+- [x] `progress` - 진행률 표시
+- [x] `input` - 검색, 폼 입력
+- [x] `select` - 필터 (국가, 상태)
+- [x] `alert` - 에러/성공 메시지
 
 ### 우선순위 중간
-- [ ] `dropdown-menu` - 액션 메뉴 (수정/삭제)
+- [x] `dropdown-menu` - 액션 메뉴 (수정/삭제)
 - [ ] `dialog` - 확인 다이얼로그
 - [ ] `toast` - 알림 메시지
 - [ ] `checkbox` - 다중 선택
