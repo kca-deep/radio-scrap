@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   ArrowLeft,
   Download,
@@ -122,11 +124,11 @@ export default function ArticleDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 max-w-5xl">
+    <div className="container mx-auto py-8 max-w-7xl">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <Button variant="ghost" onClick={() => router.push('/articles')}>
+          <Button variant="ghost" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Articles
           </Button>
@@ -162,30 +164,11 @@ export default function ArticleDetailPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-2xl">
-                  {isEditing ? (
-                    <Input
-                      value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      placeholder="Article title"
-                      className="text-2xl font-bold"
-                    />
-                  ) : (
-                    article.title
-                  )}
-                </CardTitle>
-                {(isEditing || article.title_ko) && (
-                  <CardDescription className="text-base">
-                    {isEditing ? (
-                      <Input
-                        value={editTitleKo}
-                        onChange={(e) => setEditTitleKo(e.target.value)}
-                        placeholder="Korean title"
-                      />
-                    ) : (
-                      article.title_ko
-                    )}
+              <div className="space-y-1 flex-1 min-w-0">
+                <CardTitle className="text-2xl truncate">{article.title}</CardTitle>
+                {article.title_ko && (
+                  <CardDescription className="text-base truncate">
+                    {article.title_ko}
                   </CardDescription>
                 )}
               </div>
@@ -247,97 +230,155 @@ export default function ArticleDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Content */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Content</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label className="text-sm font-medium">Original Content</Label>
-              {isEditing ? (
-                <Textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  placeholder="Original content (markdown)"
-                  className="mt-2 min-h-[200px] font-mono text-sm"
-                />
-              ) : (
-                <div className="mt-2 p-4 bg-muted rounded-md">
-                  <pre className="whitespace-pre-wrap text-sm font-mono overflow-x-auto">
-                    {article.content || 'No content'}
-                  </pre>
-                </div>
-              )}
-            </div>
+        {/* Content and Attachments */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Panel - Content (2/3) */}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Content</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="original" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="original">Original</TabsTrigger>
+                    <TabsTrigger value="translation" disabled={!article.content_ko && !isEditing}>
+                      Translation
+                    </TabsTrigger>
+                  </TabsList>
 
-            {(isEditing || article.content_ko) && (
-              <>
-                <Separator />
-                <div>
-                  <Label className="text-sm font-medium">Korean Translation</Label>
-                  {isEditing ? (
-                    <Textarea
-                      value={editContentKo}
-                      onChange={(e) => setEditContentKo(e.target.value)}
-                      placeholder="Korean content (markdown)"
-                      className="mt-2 min-h-[200px] font-mono text-sm"
-                    />
-                  ) : (
-                    <div className="mt-2 p-4 bg-muted rounded-md">
-                      <pre className="whitespace-pre-wrap text-sm font-mono overflow-x-auto">
-                        {article.content_ko}
-                      </pre>
+                  <TabsContent value="original" className="space-y-4 mt-4">
+                    <div>
+                      <Label className="text-sm font-medium">Title</Label>
+                      {isEditing ? (
+                        <Input
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          placeholder="Article title"
+                          className="mt-2"
+                        />
+                      ) : (
+                        <div className="mt-2 p-3 bg-muted rounded-md">
+                          <p className="text-sm font-medium">{article.title || 'No title'}</p>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Attachments */}
-        {article.attachments && article.attachments.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Attachments</CardTitle>
-              <CardDescription>
-                {article.attachments.length} file{article.attachments.length !== 1 ? 's' : ''}{' '}
-                attached
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {article.attachments.map((attachment) => (
-                  <div
-                    key={attachment.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <FileText className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">{attachment.filename}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Downloaded {new Date(attachment.downloaded_at).toLocaleString()}
-                        </p>
-                      </div>
+                    <div>
+                      <Label className="text-sm font-medium">Content</Label>
+                      {isEditing ? (
+                        <Textarea
+                          value={editContent}
+                          onChange={(e) => setEditContent(e.target.value)}
+                          placeholder="Original content (markdown)"
+                          className="mt-2 min-h-[400px] font-mono text-sm"
+                        />
+                      ) : (
+                        <ScrollArea className="h-[500px] w-full mt-2">
+                          <div className="p-4 bg-muted rounded-md">
+                            <pre className="whitespace-pre-wrap text-sm font-mono">
+                              {article.content || 'No content'}
+                            </pre>
+                          </div>
+                        </ScrollArea>
+                      )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        const url = getAttachmentDownloadUrl(attachment.id);
-                        window.open(url, '_blank');
-                      }}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
+                  </TabsContent>
+
+                  <TabsContent value="translation" className="space-y-4 mt-4">
+                    <div>
+                      <Label className="text-sm font-medium">Korean Title</Label>
+                      {isEditing ? (
+                        <Input
+                          value={editTitleKo}
+                          onChange={(e) => setEditTitleKo(e.target.value)}
+                          placeholder="Korean title"
+                          className="mt-2"
+                        />
+                      ) : (
+                        <div className="mt-2 p-3 bg-muted rounded-md">
+                          <p className="text-sm font-medium">{article.title_ko || 'No translation'}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-medium">Korean Content</Label>
+                      {isEditing ? (
+                        <Textarea
+                          value={editContentKo}
+                          onChange={(e) => setEditContentKo(e.target.value)}
+                          placeholder="Korean content (markdown)"
+                          className="mt-2 min-h-[400px] font-mono text-sm"
+                        />
+                      ) : (
+                        <ScrollArea className="h-[500px] w-full mt-2">
+                          <div className="p-4 bg-muted rounded-md">
+                            <pre className="whitespace-pre-wrap text-sm font-mono">
+                              {article.content_ko || 'No translation'}
+                            </pre>
+                          </div>
+                        </ScrollArea>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Panel - Attachments (1/3) */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Attachments</CardTitle>
+                <CardDescription>
+                  {article.attachments?.length || 0} file
+                  {(article.attachments?.length || 0) !== 1 ? 's' : ''} attached
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {article.attachments && article.attachments.length > 0 ? (
+                  <ScrollArea className="h-[500px] w-full">
+                    <div className="space-y-2 pr-4">
+                      {article.attachments.map((attachment) => (
+                        <div
+                          key={attachment.id}
+                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50"
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium truncate">{attachment.filename}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(attachment.downloaded_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="flex-shrink-0"
+                            onClick={() => {
+                              const url = getAttachmentDownloadUrl(attachment.id);
+                              window.open(url, '_blank');
+                            }}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                ) : (
+                  <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
+                    No attachments
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

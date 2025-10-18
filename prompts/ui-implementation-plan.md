@@ -586,31 +586,32 @@ export default function ScrapeProgressPage({ params }: { params: { jobId: string
 10. [ ] 실제 Excel 파일로 테스트
 
 ### Phase 3: 기사 관리 UI (3-4시간)
-11. [ ] `components/articles/article-table.tsx` 구현
-12. [ ] `components/articles/article-filters.tsx` 구현
-13. [ ] `app/articles/page.tsx` 구현
-14. [ ] `components/articles/article-detail.tsx` 구현
-15. [ ] `app/articles/[id]/page.tsx` 구현
-16. [ ] `components/articles/attachment-list.tsx` 구현
+11. [x] `components/articles/article-table.tsx` 구현 (app/articles/page.tsx에 통합)
+12. [x] `components/articles/article-filters.tsx` 구현 (app/articles/page.tsx에 통합)
+13. [x] `app/articles/page.tsx` 구현
+14. [x] `components/articles/article-detail.tsx` 구현 (app/articles/[id]/page.tsx에 통합)
+15. [x] `app/articles/[id]/page.tsx` 구현
+16. [x] `components/articles/attachment-list.tsx` 구현 (app/articles/[id]/page.tsx에 통합)
 
 ### Phase 4: 번역 UI (2시간)
-17. [ ] `components/translate/article-selector.tsx` 구현
-18. [ ] `app/translate/page.tsx` 구현
-19. [ ] `components/translate/translate-progress.tsx` 구현
-20. [ ] `app/translate/[jobId]/page.tsx` 구현
+17. [x] `components/translate/article-selector.tsx` 구현
+18. [x] `app/translate/page.tsx` 구현
+19. [x] `components/translate/translate-progress.tsx` 구현
+20. [x] `app/translate/[jobId]/page.tsx` 구현
 
 ### Phase 5: 발행 UI (2-3시간)
-21. [ ] `components/publish/article-picker.tsx` 구현
-22. [ ] `components/publish/magazine-editor.tsx` 구현
-23. [ ] `app/publish/page.tsx` 구현
-24. [ ] `components/publish/email-form.tsx` 구현
-25. [ ] `app/publish/[id]/page.tsx` (미리보기) 구현
+21. [x] `components/publish/article-picker.tsx` 구현
+22. [x] `components/publish/magazine-editor.tsx` 구현 (app/publish/page.tsx에 통합)
+23. [x] `app/publish/page.tsx` 구현
+24. [x] `components/publish/email-form.tsx` 구현
+25. [x] `app/publish/[id]/page.tsx` (미리보기) 구현
+26. [x] `app/magazine/[id]/page.tsx` (공개 매거진 뷰어) 구현
 
 ### Phase 6: 통합 테스트 (1-2시간)
-26. [ ] 전체 워크플로우 테스트 (스크랩 → 기사 → 번역 → 발행)
-27. [ ] 에러 핸들링 개선
-28. [ ] 로딩 상태 개선
-29. [ ] 반응형 디자인 확인
+27. [ ] 전체 워크플로우 테스트 (스크랩 → 기사 → 번역 → 발행)
+28. [ ] 에러 핸들링 개선
+29. [ ] 로딩 상태 개선
+30. [ ] 반응형 디자인 확인
 
 ---
 
@@ -628,18 +629,20 @@ export default function ScrapeProgressPage({ params }: { params: { jobId: string
 
 ### 우선순위 중간
 - [x] `dropdown-menu` - 액션 메뉴 (수정/삭제)
-- [ ] `dialog` - 확인 다이얼로그
-- [ ] `toast` - 알림 메시지
-- [ ] `checkbox` - 다중 선택
-- [ ] `textarea` - 기사 편집
-- [ ] `label` - 폼 레이블
+- [x] `dialog` - 확인 다이얼로그
+- [ ] `toast` - 알림 메시지 (선택사항)
+- [x] `checkbox` - 다중 선택
+- [x] `textarea` - 기사 편집
+- [x] `label` - 폼 레이블
 
 ### 우선순위 낮음 (선택)
-- [ ] `tabs` - 뷰 전환
-- [ ] `pagination` - 페이지네이션
-- [ ] `skeleton` - 로딩 스켈레톤
-- [ ] `separator` - 구분선
-- [ ] `scroll-area` - 스크롤 영역
+- [x] `tabs` - 뷰 전환
+- [ ] `pagination` - 페이지네이션 (선택사항)
+- [x] `skeleton` - 로딩 스켈레톤
+- [x] `separator` - 구분선
+- [x] `scroll-area` - 스크롤 영역
+- [x] `popover` - 팝오버 (날짜 선택)
+- [x] `calendar` - 캘린더 (날짜 범위 선택)
 
 ---
 
@@ -740,13 +743,13 @@ export default function Loading() {
 ## 8. 완료 조건
 
 ✅ UI 구현 완료 기준:
-1. [ ] 4개 주요 페이지 모두 구현 (/scrape, /articles, /translate, /publish)
-2. [ ] SSE를 통한 실시간 진행률 표시 동작
+1. [x] 4개 주요 페이지 모두 구현 (/scrape, /articles, /translate, /publish)
+2. [x] SSE를 통한 실시간 진행률 표시 구현
 3. [ ] Excel 업로드 → 스크랩 → 기사 조회 → 번역 → 발행 전체 플로우 테스트 성공
-4. [ ] 에러 핸들링 및 로딩 상태 적용
-5. [ ] shadcn/ui 컴포넌트로 일관된 디자인 적용
-6. [ ] 반응형 디자인 (모바일/태블릿/데스크톱)
-7. [ ] TypeScript 타입 안정성 확보
+4. [x] 에러 핸들링 및 로딩 상태 적용
+5. [x] shadcn/ui 컴포넌트로 일관된 디자인 적용
+6. [x] TypeScript 타입 안정성 확보
+7. [ ] 반응형 디자인 확인 및 개선
 
 ---
 

@@ -10,15 +10,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Moon, Sun, Radio, FileText, Languages, Send } from "lucide-react";
+import { Moon, Sun, Radio, FileText, Languages, Send, Download, BookOpen, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "Home", href: "/", icon: Radio },
-  { name: "Scrape", href: "/scrape", icon: FileText },
-  { name: "Articles", href: "/articles", icon: FileText },
-  { name: "Translate", href: "/translate", icon: Languages, disabled: true },
-  { name: "Publish", href: "/publish", icon: Send, disabled: true },
+  { name: "Scrape", href: "/scrape", icon: Download, description: "Upload & scrape URLs" },
+  { name: "Articles", href: "/articles", icon: BookOpen, description: "Manage articles" },
+  { name: "Translate", href: "/translate", icon: Languages, description: "Translate to Korean" },
+  { name: "Publish", href: "/publish", icon: Send, description: "Generate magazine" },
 ];
 
 export default function Header() {
@@ -44,21 +43,6 @@ export default function Header() {
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
 
-            if (item.disabled) {
-              return (
-                <Button
-                  key={item.name}
-                  variant="ghost"
-                  size="sm"
-                  disabled
-                  className="text-muted-foreground"
-                >
-                  <Icon className="mr-2 h-4 w-4" />
-                  {item.name}
-                </Button>
-              );
-            }
-
             return (
               <Link key={item.name} href={item.href}>
                 <Button
@@ -68,6 +52,7 @@ export default function Header() {
                     "transition-colors",
                     isActive && "bg-secondary"
                   )}
+                  title={item.description}
                 >
                   <Icon className="mr-2 h-4 w-4" />
                   {item.name}
@@ -106,28 +91,22 @@ export default function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild className="md:hidden">
                 <Button variant="ghost" size="icon">
-                  <FileText className="h-5 w-5" />
+                  <Menu className="h-5 w-5" />
                   <span className="sr-only">Menu</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-56">
                 {navigation.map((item) => {
                   const Icon = item.icon;
 
-                  if (item.disabled) {
-                    return (
-                      <DropdownMenuItem key={item.name} disabled>
-                        <Icon className="mr-2 h-4 w-4" />
-                        {item.name}
-                      </DropdownMenuItem>
-                    );
-                  }
-
                   return (
                     <DropdownMenuItem key={item.name} asChild>
-                      <Link href={item.href} className="flex items-center">
+                      <Link href={item.href} className="flex items-center cursor-pointer">
                         <Icon className="mr-2 h-4 w-4" />
-                        {item.name}
+                        <div className="flex flex-col">
+                          <span>{item.name}</span>
+                          <span className="text-xs text-muted-foreground">{item.description}</span>
+                        </div>
                       </Link>
                     </DropdownMenuItem>
                   );

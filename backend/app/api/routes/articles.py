@@ -24,6 +24,11 @@ async def list_articles(
     country_code: str | None = Query(None, description="Filter by country code"),
     status: str | None = Query(None, description="Filter by status"),
     source: str | None = Query(None, description="Filter by source"),
+    search: str | None = Query(None, description="Search in title and source"),
+    scraped_from: str | None = Query(None, description="Scraped date from (YYYY-MM-DD)"),
+    scraped_to: str | None = Query(None, description="Scraped date to (YYYY-MM-DD)"),
+    published_from: str | None = Query(None, description="Published date from (YYYY-MM-DD)"),
+    published_to: str | None = Query(None, description="Published date to (YYYY-MM-DD)"),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(100, ge=1, le=1000, description="Max records to return"),
     db: AsyncSession = Depends(get_db)
@@ -35,6 +40,9 @@ async def list_articles(
     - country_code: Filter by country (KR, US, UK, JP)
     - status: Filter by status (scraped, translated)
     - source: Filter by source organization
+    - search: Search in title (both original and Korean) and source
+    - scraped_from/scraped_to: Filter by scraped date range
+    - published_from/published_to: Filter by published date range
 
     Returns list of articles with attachment count.
     """
@@ -48,6 +56,31 @@ async def list_articles(
             query = query.where(ArticleModel.status == status)
         if source:
             query = query.where(ArticleModel.source.ilike(f"%{source}%"))
+        if search:
+            # Search in title, title_ko, and source
+            search_filter = (
+                ArticleModel.title.ilike(f"%{search}%") |
+                ArticleModel.title_ko.ilike(f"%{search}%") |
+                ArticleModel.source.ilike(f"%{search}%")
+            )
+            query = query.where(search_filter)
+
+        # Date range filters for scraped_at
+        if scraped_from:
+            query = query.where(ArticleModel.scraped_at >= scraped_from)
+        if scraped_to:
+            # Add one day to include the entire end date
+            from datetime import datetime, timedelta
+            end_date = datetime.fromisoformat(scraped_to) + timedelta(days=1)
+            query = query.where(ArticleModel.scraped_at < end_date.isoformat())
+
+        # Date range filters for published_date
+        if published_from:
+            query = query.where(ArticleModel.published_date >= published_from)
+        if published_to:
+            from datetime import datetime, timedelta
+            end_date = datetime.fromisoformat(published_to) + timedelta(days=1)
+            query = query.where(ArticleModel.published_date < end_date.isoformat())
 
         # Apply ordering and pagination
         query = query.order_by(ArticleModel.scraped_at.desc()).offset(skip).limit(limit)

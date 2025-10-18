@@ -66,9 +66,11 @@ export interface ArticleFilters {
   country_code?: CountryCode;
   status?: ArticleStatus;
   source?: string;
-  start_date?: string;
-  end_date?: string;
   search?: string;
+  scraped_from?: string;
+  scraped_to?: string;
+  published_from?: string;
+  published_to?: string;
 }
 
 // Translation related

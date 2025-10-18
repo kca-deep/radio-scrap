@@ -7,7 +7,7 @@ interface UseSSEOptions<T> {
   onError?: (error: string) => void;
 }
 
-export function useSSE<T = any>(
+export function useSSE<T extends object = any>(
   endpoint: string | null,
   options: UseSSEOptions<T> = {}
 ) {

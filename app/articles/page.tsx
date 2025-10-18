@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getArticles } from '@/lib/api-client';
 import { Article } from '@/lib/types';
 import {
@@ -24,18 +24,63 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, FileText, Search } from 'lucide-react';
+import { Eye, FileText, Search, CalendarIcon } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { DateRange } from 'react-day-picker';
+import { cn } from '@/lib/utils';
 
 export default function ArticlesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filters
-  const [countryCode, setCountryCode] = useState<string>('all');
-  const [status, setStatus] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  // Initialize filters from URL
+  const [countryCode, setCountryCode] = useState<string>(searchParams.get('country_code') || 'all');
+  const [status, setStatus] = useState<string>(searchParams.get('status') || 'all');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+
+  // Initialize date ranges from URL
+  const [scrapedDateRange, setScrapedDateRange] = useState<DateRange | undefined>(() => {
+    const from = searchParams.get('scraped_from');
+    const to = searchParams.get('scraped_to');
+    if (from || to) {
+      return {
+        from: from ? new Date(from) : undefined,
+        to: to ? new Date(to) : undefined,
+      };
+    }
+    return undefined;
+  });
+
+  const [publishedDateRange, setPublishedDateRange] = useState<DateRange | undefined>(() => {
+    const from = searchParams.get('published_from');
+    const to = searchParams.get('published_to');
+    if (from || to) {
+      return {
+        from: from ? new Date(from) : undefined,
+        to: to ? new Date(to) : undefined,
+      };
+    }
+    return undefined;
+  });
+
+  // Update URL with current filters
+  const updateURL = (filters: Record<string, string>) => {
+    const params = new URLSearchParams();
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value && value !== 'all') {
+        params.set(key, value);
+      }
+    });
+
+    const queryString = params.toString();
+    router.push(`/articles${queryString ? `?${queryString}` : ''}`, { scroll: false });
+  };
 
   const fetchArticles = async () => {
     setLoading(true);
@@ -46,6 +91,25 @@ export default function ArticlesPage() {
       if (countryCode && countryCode !== 'all') filters.country_code = countryCode;
       if (status && status !== 'all') filters.status = status;
       if (searchTerm) filters.search = searchTerm;
+
+      // Add scraped date range
+      if (scrapedDateRange?.from) {
+        filters.scraped_from = format(scrapedDateRange.from, 'yyyy-MM-dd');
+      }
+      if (scrapedDateRange?.to) {
+        filters.scraped_to = format(scrapedDateRange.to, 'yyyy-MM-dd');
+      }
+
+      // Add published date range
+      if (publishedDateRange?.from) {
+        filters.published_from = format(publishedDateRange.from, 'yyyy-MM-dd');
+      }
+      if (publishedDateRange?.to) {
+        filters.published_to = format(publishedDateRange.to, 'yyyy-MM-dd');
+      }
+
+      // Update URL with current filters
+      updateURL(filters);
 
       const data = await getArticles(filters);
       setArticles(data);
@@ -58,7 +122,7 @@ export default function ArticlesPage() {
 
   useEffect(() => {
     fetchArticles();
-  }, [countryCode, status]);
+  }, [countryCode, status, scrapedDateRange, publishedDateRange]);
 
   const handleSearch = () => {
     fetchArticles();
@@ -101,9 +165,9 @@ export default function ArticlesPage() {
         <Card>
           <CardHeader>
             <CardTitle>Filters</CardTitle>
-            <CardDescription>Filter articles by country, status, or search term</CardDescription>
+            <CardDescription>Filter articles by country, status, date range, or search term</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Select value={countryCode} onValueChange={setCountryCode}>
                 <SelectTrigger>
@@ -139,6 +203,88 @@ export default function ArticlesPage() {
                 <Button onClick={handleSearch} variant="secondary">
                   <Search className="h-4 w-4" />
                 </Button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Scraped Date Range */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Scraped Date Range</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'w-full justify-start text-left font-normal',
+                        !scrapedDateRange && 'text-muted-foreground'
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {scrapedDateRange?.from ? (
+                        scrapedDateRange.to ? (
+                          <>
+                            {format(scrapedDateRange.from, 'MMM dd, yyyy')} -{' '}
+                            {format(scrapedDateRange.to, 'MMM dd, yyyy')}
+                          </>
+                        ) : (
+                          format(scrapedDateRange.from, 'MMM dd, yyyy')
+                        )
+                      ) : (
+                        <span>Select date range</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={scrapedDateRange?.from}
+                      selected={scrapedDateRange}
+                      onSelect={setScrapedDateRange}
+                      numberOfMonths={2}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Published Date Range */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Published Date Range</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'w-full justify-start text-left font-normal',
+                        !publishedDateRange && 'text-muted-foreground'
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {publishedDateRange?.from ? (
+                        publishedDateRange.to ? (
+                          <>
+                            {format(publishedDateRange.from, 'MMM dd, yyyy')} -{' '}
+                            {format(publishedDateRange.to, 'MMM dd, yyyy')}
+                          </>
+                        ) : (
+                          format(publishedDateRange.from, 'MMM dd, yyyy')
+                        )
+                      ) : (
+                        <span>Select date range</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={publishedDateRange?.from}
+                      selected={publishedDateRange}
+                      onSelect={setPublishedDateRange}
+                      numberOfMonths={2}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </CardContent>
