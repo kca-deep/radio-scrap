@@ -13,6 +13,7 @@ sqlalchemy==2.0.36
 # API Integration
 httpx==0.28.1
 openai==1.59.8
+tenacity==9.0.0
 # firecrawl-py - PyPI에서 사용 가능한 버전이 없음, Phase 2에서 httpx로 직접 구현
 
 # Data Processing
