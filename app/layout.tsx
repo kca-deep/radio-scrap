@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Radio Policy Magazine",
-  description: "Automated web scraping, translation, and magazine generation system",
+  title: "주파수 정책 모니터링 시스템",
+  description: "주요국 전파 정책 데이터 AI 기반 수집·번역·시각화 - 실시간 주파수 동향 모니터링",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="ko" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

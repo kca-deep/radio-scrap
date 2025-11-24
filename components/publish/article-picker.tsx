@@ -83,15 +83,15 @@ export default function ArticlePicker({
       {/* Left: Available Articles */}
       <Card>
         <CardHeader>
-          <CardTitle>Available Articles</CardTitle>
+          <CardTitle>사용 가능한 기사</CardTitle>
           <CardDescription>
-            Select translated articles to include in the magazine
+            매거진에 포함할 번역된 기사를 선택하세요
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {articles.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
-              No translated articles available
+              번역된 기사가 없습니다
             </div>
           ) : (
             <Table>
@@ -101,12 +101,12 @@ export default function ArticlePicker({
                     <Checkbox
                       checked={selectedIds.length === articles.length && articles.length > 0}
                       onCheckedChange={toggleAll}
-                      aria-label="Select all"
+                      aria-label="모두 선택"
                     />
                   </TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Country</TableHead>
+                  <TableHead>제목</TableHead>
+                  <TableHead>출처</TableHead>
+                  <TableHead>국가</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -120,7 +120,7 @@ export default function ArticlePicker({
                       <Checkbox
                         checked={selectedIds.includes(article.id)}
                         onCheckedChange={() => toggleArticle(article.id)}
-                        aria-label={`Select ${article.title_ko || article.title}`}
+                        aria-label={`선택: ${article.title_ko || article.title}`}
                       />
                     </TableCell>
                     <TableCell className="font-medium max-w-md truncate">
@@ -141,15 +141,15 @@ export default function ArticlePicker({
       {/* Right: Selected Articles (Ordered) */}
       <Card>
         <CardHeader>
-          <CardTitle>Selected Articles</CardTitle>
+          <CardTitle>선택된 기사</CardTitle>
           <CardDescription>
-            {selectedIds.length} article{selectedIds.length !== 1 ? 's' : ''} selected. Drag to reorder.
+            {selectedIds.length}개 기사 선택됨. 순서를 변경하려면 버튼을 사용하세요.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {selectedIds.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground border-2 border-dashed rounded-lg">
-              No articles selected
+              선택된 기사가 없습니다
             </div>
           ) : (
             <div className="space-y-2">

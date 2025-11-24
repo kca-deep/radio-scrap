@@ -74,9 +74,9 @@ export default function ArticleSelector({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Select Articles to Translate</CardTitle>
+              <CardTitle>번역할 기사 선택</CardTitle>
               <CardDescription>
-                Choose articles with status &quot;Scraped&quot; to translate to Korean
+                스크랩 완료된 기사를 선택하여 한글로 번역하세요
               </CardDescription>
             </div>
             <Button
@@ -86,15 +86,15 @@ export default function ArticleSelector({
             >
               <Languages className="mr-2 h-4 w-4" />
               {isLoading
-                ? 'Starting...'
-                : `Translate ${selectedIds.size} Article${selectedIds.size !== 1 ? 's' : ''}`}
+                ? '시작 중...'
+                : `${selectedIds.size}개 기사 번역하기`}
             </Button>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           {articles.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
-              No articles available for translation. Please scrape articles first.
+              번역 가능한 기사가 없습니다. 먼저 기사를 스크랩해주세요.
             </div>
           ) : (
             <Table>
@@ -104,14 +104,14 @@ export default function ArticleSelector({
                     <Checkbox
                       checked={selectedIds.size === articles.length && articles.length > 0}
                       onCheckedChange={toggleAll}
-                      aria-label="Select all"
+                      aria-label="모두 선택"
                     />
                   </TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Country</TableHead>
-                  <TableHead>Attachments</TableHead>
-                  <TableHead>Scraped</TableHead>
+                  <TableHead>제목</TableHead>
+                  <TableHead>출처</TableHead>
+                  <TableHead>국가</TableHead>
+                  <TableHead>첨부파일</TableHead>
+                  <TableHead>스크랩 날짜</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -153,14 +153,14 @@ export default function ArticleSelector({
       {selectedIds.size > 0 && (
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            {selectedIds.size} of {articles.length} articles selected
+            전체 {articles.length}개 중 {selectedIds.size}개 선택됨
           </span>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setSelectedIds(new Set())}
           >
-            Clear selection
+            선택 해제
           </Button>
         </div>
       )}

@@ -21,7 +21,7 @@ export default function TranslateProgress({ events, isConnected, error }: Transl
       <Card>
         <CardContent className="p-8 text-center text-muted-foreground">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p>Initializing translation...</p>
+          <p>번역 초기화 중...</p>
         </CardContent>
       </Card>
     );
@@ -37,28 +37,28 @@ export default function TranslateProgress({ events, isConnected, error }: Transl
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Translation Progress</CardTitle>
+              <CardTitle>번역 진행 상황</CardTitle>
               <CardDescription>
-                Translating articles from English to Korean
+                영어에서 한국어로 기사를 번역하고 있습니다
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
               {isConnected && !isCompleted && !isFailed && (
                 <Badge variant="default" className="flex items-center gap-1">
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  Processing
+                  처리 중
                 </Badge>
               )}
               {isCompleted && (
                 <Badge variant="default" className="flex items-center gap-1 bg-green-600">
                   <CheckCircle2 className="h-3 w-3" />
-                  Completed
+                  완료
                 </Badge>
               )}
               {isFailed && (
                 <Badge variant="destructive" className="flex items-center gap-1">
                   <XCircle className="h-3 w-3" />
-                  Failed
+                  실패
                 </Badge>
               )}
             </div>
@@ -67,14 +67,14 @@ export default function TranslateProgress({ events, isConnected, error }: Transl
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Progress</span>
+              <span className="text-muted-foreground">진행률</span>
               <span className="font-medium">
-                {latestEvent.processed} / {latestEvent.total} articles
+                {latestEvent.processed} / {latestEvent.total} 기사
               </span>
             </div>
             <Progress value={progress} className="h-2" />
             <p className="text-xs text-muted-foreground text-right">
-              {Math.round(progress)}% complete
+              {Math.round(progress)}% 완료
             </p>
           </div>
 
@@ -82,8 +82,8 @@ export default function TranslateProgress({ events, isConnected, error }: Transl
             <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
               <Languages className="h-5 w-5 text-primary animate-pulse" />
               <div>
-                <p className="text-sm font-medium">Currently translating</p>
-                <p className="text-xs text-muted-foreground">Article ID: {latestEvent.current_article_id}</p>
+                <p className="text-sm font-medium">현재 번역 중</p>
+                <p className="text-xs text-muted-foreground">기사 ID: {latestEvent.current_article_id}</p>
               </div>
             </div>
           )}
@@ -106,7 +106,7 @@ export default function TranslateProgress({ events, isConnected, error }: Transl
       {events.length > 1 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm">Activity Log</CardTitle>
+            <CardTitle className="text-sm">활동 로그</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -122,10 +122,10 @@ export default function TranslateProgress({ events, isConnected, error }: Transl
                     {event.processed} / {event.total}
                   </span>
                   {event.current_article_id && (
-                    <span className="text-muted-foreground">- Article: {event.current_article_id}</span>
+                    <span className="text-muted-foreground">- 기사: {event.current_article_id}</span>
                   )}
                   {event.error && (
-                    <span className="text-red-600">- Error: {event.error}</span>
+                    <span className="text-red-600">- 오류: {event.error}</span>
                   )}
                 </div>
               ))}

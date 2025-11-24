@@ -130,9 +130,9 @@ export default function ArticlesPage() {
 
   const getStatusBadge = (status: string) => {
     return status === 'translated' ? (
-      <Badge variant="default">Translated</Badge>
+      <Badge variant="default">번역 완료</Badge>
     ) : (
-      <Badge variant="secondary">Scraped</Badge>
+      <Badge variant="secondary">스크랩 완료</Badge>
     );
   };
 
@@ -155,47 +155,47 @@ export default function ArticlesPage() {
     <div className="container mx-auto py-8 max-w-7xl">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Articles</h1>
+          <h1 className="text-3xl font-bold tracking-tight">기사 관리</h1>
           <p className="text-muted-foreground mt-2">
-            Browse and manage scraped articles
+            수집된 기사 조회 및 관리
           </p>
         </div>
 
         {/* Filters */}
         <Card>
           <CardHeader>
-            <CardTitle>Filters</CardTitle>
-            <CardDescription>Filter articles by country, status, date range, or search term</CardDescription>
+            <CardTitle>필터</CardTitle>
+            <CardDescription>국가, 상태, 날짜 범위 또는 검색어로 기사 필터링</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Select value={countryCode} onValueChange={setCountryCode}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Countries" />
+                  <SelectValue placeholder="전체 국가" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Countries</SelectItem>
-                  <SelectItem value="US">United States</SelectItem>
-                  <SelectItem value="UK">United Kingdom</SelectItem>
-                  <SelectItem value="JP">Japan</SelectItem>
-                  <SelectItem value="KR">South Korea</SelectItem>
+                  <SelectItem value="all">전체 국가</SelectItem>
+                  <SelectItem value="US">미국</SelectItem>
+                  <SelectItem value="UK">영국</SelectItem>
+                  <SelectItem value="JP">일본</SelectItem>
+                  <SelectItem value="KR">한국</SelectItem>
                 </SelectContent>
               </Select>
 
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Status" />
+                  <SelectValue placeholder="전체 상태" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="scraped">Scraped</SelectItem>
-                  <SelectItem value="translated">Translated</SelectItem>
+                  <SelectItem value="all">전체 상태</SelectItem>
+                  <SelectItem value="scraped">스크랩 완료</SelectItem>
+                  <SelectItem value="translated">번역 완료</SelectItem>
                 </SelectContent>
               </Select>
 
               <div className="flex gap-2 md:col-span-2">
                 <Input
-                  placeholder="Search by title or source..."
+                  placeholder="제목 또는 소스로 검색..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -209,7 +209,7 @@ export default function ArticlesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Scraped Date Range */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Scraped Date Range</label>
+                <label className="text-sm font-medium">스크랩 날짜 범위</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -230,7 +230,7 @@ export default function ArticlesPage() {
                           format(scrapedDateRange.from, 'MMM dd, yyyy')
                         )
                       ) : (
-                        <span>Select date range</span>
+                        <span>날짜 범위 선택</span>
                       )}
                     </Button>
                   </PopoverTrigger>
@@ -249,7 +249,7 @@ export default function ArticlesPage() {
 
               {/* Published Date Range */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">Published Date Range</label>
+                <label className="text-sm font-medium">발행 날짜 범위</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -270,7 +270,7 @@ export default function ArticlesPage() {
                           format(publishedDateRange.from, 'MMM dd, yyyy')
                         )
                       ) : (
-                        <span>Select date range</span>
+                        <span>날짜 범위 선택</span>
                       )}
                     </Button>
                   </PopoverTrigger>
@@ -301,23 +301,23 @@ export default function ArticlesPage() {
           <CardContent className="p-0">
             {loading ? (
               <div className="p-8 text-center text-muted-foreground">
-                Loading articles...
+                기사 로딩 중...
               </div>
             ) : articles.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
-                No articles found
+                기사를 찾을 수 없습니다
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Country</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Attachments</TableHead>
-                    <TableHead>Scraped</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>제목</TableHead>
+                    <TableHead>소스</TableHead>
+                    <TableHead>국가</TableHead>
+                    <TableHead>상태</TableHead>
+                    <TableHead>첨부파일</TableHead>
+                    <TableHead>스크랩 날짜</TableHead>
+                    <TableHead className="text-right">동작</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -365,7 +365,7 @@ export default function ArticlesPage() {
         {/* Summary */}
         {!loading && articles.length > 0 && (
           <div className="text-sm text-muted-foreground">
-            Showing {articles.length} article{articles.length !== 1 ? 's' : ''}
+            {articles.length}개의 기사 표시
           </div>
         )}
       </div>

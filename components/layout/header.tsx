@@ -14,10 +14,10 @@ import { Moon, Sun, Radio, FileText, Languages, Send, Download, BookOpen, Menu }
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "Scrape", href: "/scrape", icon: Download, description: "Upload & scrape URLs" },
-  { name: "Articles", href: "/articles", icon: BookOpen, description: "Manage articles" },
-  { name: "Translate", href: "/translate", icon: Languages, description: "Translate to Korean" },
-  { name: "Publish", href: "/publish", icon: Send, description: "Generate magazine" },
+  { name: "스크랩", href: "/scrape", icon: Download, description: "URL 업로드 및 스크랩" },
+  { name: "기사 관리", href: "/articles", icon: BookOpen, description: "기사 관리" },
+  { name: "번역", href: "/translate", icon: Languages, description: "한글 번역" },
+  { name: "발행", href: "/publish", icon: Send, description: "매거진 생성" },
 ];
 
 export default function Header() {
@@ -31,9 +31,12 @@ export default function Header() {
         <div className="flex items-center flex-1">
           <Link href="/" className="flex items-center space-x-2">
             <Radio className="h-6 w-6" />
-            <span className="font-bold hidden sm:inline-block">
-              Radio Policy
-            </span>
+            <div className="hidden sm:flex flex-col leading-tight">
+              <span className="font-bold text-base bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                주파수 정책
+              </span>
+              <span className="text-xs text-muted-foreground">AI 모니터링</span>
+            </div>
           </Link>
         </div>
 
@@ -69,21 +72,21 @@ export default function Header() {
                 <Button variant="ghost" size="icon">
                   <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                   <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                  <span className="sr-only">Toggle theme</span>
+                  <span className="sr-only">테마 전환</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setTheme("light")}>
                   <Sun className="mr-2 h-4 w-4" />
-                  Light
+                  라이트
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTheme("dark")}>
                   <Moon className="mr-2 h-4 w-4" />
-                  Dark
+                  다크
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTheme("system")}>
                   <Radio className="mr-2 h-4 w-4" />
-                  System
+                  시스템
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -92,7 +95,7 @@ export default function Header() {
               <DropdownMenuTrigger asChild className="md:hidden">
                 <Button variant="ghost" size="icon">
                   <Menu className="h-5 w-5" />
-                  <span className="sr-only">Menu</span>
+                  <span className="sr-only">메뉴</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">

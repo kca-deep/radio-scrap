@@ -28,7 +28,7 @@ export default function TranslatePage() {
       const data = await getArticles({ status: 'scraped' });
       setArticles(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch articles');
+      setError(err instanceof Error ? err.message : '기사를 불러오는데 실패했습니다');
     } finally {
       setLoading(false);
     }
@@ -44,7 +44,7 @@ export default function TranslatePage() {
       const { job_id } = await startTranslation(selectedIds);
       router.push(`/translate/${job_id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start translation');
+      setError(err instanceof Error ? err.message : '번역을 시작하는데 실패했습니다');
       setIsStarting(false);
     }
   };
@@ -53,9 +53,9 @@ export default function TranslatePage() {
     <div className="container mx-auto py-8 max-w-7xl">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Translation</h1>
+          <h1 className="text-3xl font-bold tracking-tight">번역</h1>
           <p className="text-muted-foreground mt-2">
-            Select scraped articles to translate from English to Korean
+            영한 번역할 스크랩된 기사 선택
           </p>
         </div>
 
@@ -90,9 +90,9 @@ export default function TranslatePage() {
         {!loading && articles.length === 0 && (
           <Card>
             <CardContent className="p-8 text-center">
-              <CardTitle className="mb-2">No Articles to Translate</CardTitle>
+              <CardTitle className="mb-2">번역할 기사 없음</CardTitle>
               <CardDescription className="mb-4">
-                All scraped articles have already been translated, or no articles have been scraped yet.
+                모든 스크랩된 기사가 이미 번역되었거나, 아직 스크랩된 기사가 없습니다.
               </CardDescription>
             </CardContent>
           </Card>

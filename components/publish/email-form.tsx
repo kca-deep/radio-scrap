@@ -31,17 +31,17 @@ export default function EmailForm({ publicationId, onSendEmail }: EmailFormProps
     const email = currentEmail.trim();
 
     if (!email) {
-      setError('Please enter an email address');
+      setError('이메일 주소를 입력하세요');
       return;
     }
 
     if (!validateEmail(email)) {
-      setError('Please enter a valid email address');
+      setError('올바른 이메일 주소를 입력하세요');
       return;
     }
 
     if (recipients.includes(email)) {
-      setError('This email is already in the recipient list');
+      setError('이미 수신자 목록에 있는 이메일입니다');
       return;
     }
 
@@ -63,12 +63,12 @@ export default function EmailForm({ publicationId, onSendEmail }: EmailFormProps
 
   const handleSend = async () => {
     if (recipients.length === 0) {
-      setError('Please add at least one recipient');
+      setError('최소 한 명의 수신자를 추가하세요');
       return;
     }
 
     if (!subject.trim()) {
-      setError('Please enter a subject line');
+      setError('제목을 입력하세요');
       return;
     }
 
@@ -82,7 +82,7 @@ export default function EmailForm({ publicationId, onSendEmail }: EmailFormProps
       setRecipients([]);
       setSubject('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send email');
+      setError(err instanceof Error ? err.message : '이메일 전송에 실패했습니다');
     } finally {
       setIsSending(false);
     }
@@ -91,18 +91,18 @@ export default function EmailForm({ publicationId, onSendEmail }: EmailFormProps
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Send via Email</CardTitle>
+        <CardTitle>이메일 발송</CardTitle>
         <CardDescription>
-          Send the generated magazine to recipients via email
+          생성된 매거진을 수신자에게 이메일로 발송합니다
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="subject">Subject</Label>
+          <Label htmlFor="subject">제목</Label>
           <Input
             id="subject"
             type="text"
-            placeholder="Monthly Policy Magazine"
+            placeholder="월간 정책 매거진"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             disabled={isSending}
@@ -110,12 +110,12 @@ export default function EmailForm({ publicationId, onSendEmail }: EmailFormProps
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Recipients</Label>
+          <Label htmlFor="email">받는 사람</Label>
           <div className="flex gap-2">
             <Input
               id="email"
               type="email"
-              placeholder="Enter email address"
+              placeholder="이메일 주소 입력"
               value={currentEmail}
               onChange={(e) => setCurrentEmail(e.target.value)}
               onKeyPress={handleKeyPress}
@@ -134,7 +134,7 @@ export default function EmailForm({ publicationId, onSendEmail }: EmailFormProps
 
         {recipients.length > 0 && (
           <div className="space-y-2">
-            <Label>Recipient List ({recipients.length})</Label>
+            <Label>수신자 목록 ({recipients.length}명)</Label>
             <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-muted/50">
               {recipients.map((email) => (
                 <Badge key={email} variant="secondary" className="flex items-center gap-1 pr-1">
@@ -164,7 +164,7 @@ export default function EmailForm({ publicationId, onSendEmail }: EmailFormProps
         {success && (
           <Alert>
             <AlertDescription className="text-green-600">
-              Email sent successfully to {recipients.length} recipient{recipients.length !== 1 ? 's' : ''}!
+              {recipients.length}명의 수신자에게 이메일을 성공적으로 발송했습니다!
             </AlertDescription>
           </Alert>
         )}
@@ -176,7 +176,7 @@ export default function EmailForm({ publicationId, onSendEmail }: EmailFormProps
           size="lg"
         >
           <Send className="mr-2 h-4 w-4" />
-          {isSending ? 'Sending...' : `Send to ${recipients.length} Recipient${recipients.length !== 1 ? 's' : ''}`}
+          {isSending ? '발송 중...' : `${recipients.length}명에게 발송`}
         </Button>
       </CardContent>
     </Card>

@@ -31,12 +31,12 @@ export default function ExcelUploader({ onUpload, isLoading = false }: ExcelUplo
     const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
 
     if (!validExtensions.includes(fileExtension)) {
-      setError('Please upload an Excel file (.xlsx or .xls)');
+      setError('Excel 파일을 업로드해주세요 (.xlsx 또는 .xls)');
       return false;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      setError('File size must be less than 10MB');
+      setError('파일 크기는 10MB 미만이어야 합니다');
       return false;
     }
 
@@ -77,17 +77,17 @@ export default function ExcelUploader({ onUpload, isLoading = false }: ExcelUplo
       setError(null);
       await onUpload(selectedFile);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload file');
+      setError(err instanceof Error ? err.message : '파일 업로드에 실패했습니다');
     }
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Upload URL List</CardTitle>
+        <CardTitle>URL 목록 업로드</CardTitle>
         <CardDescription>
-          Upload an Excel file containing article URLs to scrape.
-          Required columns: title, date, link, source
+          스크랩할 기사 URL이 포함된 Excel 파일을 업로드하세요.
+          필수 컬럼: title, date, link, source
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -106,10 +106,10 @@ export default function ExcelUploader({ onUpload, isLoading = false }: ExcelUplo
           <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
           <div className="space-y-2">
             <p className="text-sm font-medium">
-              {selectedFile ? selectedFile.name : 'Drop your Excel file here'}
+              {selectedFile ? selectedFile.name : '여기에 Excel 파일을 드롭하세요'}
             </p>
             <p className="text-xs text-muted-foreground">
-              or click to browse
+              또는 클릭하여 파일 선택
             </p>
           </div>
           <input
@@ -140,7 +140,7 @@ export default function ExcelUploader({ onUpload, isLoading = false }: ExcelUplo
               onClick={handleUpload}
               disabled={isLoading}
             >
-              {isLoading ? 'Uploading...' : 'Upload & Parse'}
+              {isLoading ? '업로드 중...' : '업로드 및 파싱'}
             </Button>
           </div>
         )}

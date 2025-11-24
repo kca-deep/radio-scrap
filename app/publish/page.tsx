@@ -46,12 +46,12 @@ export default function PublishPage() {
 
   const handlePublishHTML = async () => {
     if (selectedIds.length === 0) {
-      setError('Please select at least one article');
+      setError('최소 하나의 기사를 선택해주세요');
       return;
     }
 
     if (!magazineTitle.trim()) {
-      setError('Please enter a magazine title');
+      setError('매거진 제목을 입력해주세요');
       return;
     }
 
@@ -87,9 +87,9 @@ export default function PublishPage() {
     <div className="container mx-auto py-8 max-w-7xl">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Publish Magazine</h1>
+          <h1 className="text-3xl font-bold tracking-tight">매거진 발행</h1>
           <p className="text-muted-foreground mt-2">
-            Select translated articles, generate HTML magazine, and send via email
+            번역된 기사 선택, HTML 매거진 생성 및 이메일 발송
           </p>
         </div>
 
@@ -102,16 +102,16 @@ export default function PublishPage() {
         {/* Magazine Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>Magazine Settings</CardTitle>
-            <CardDescription>Configure your magazine title and content</CardDescription>
+            <CardTitle>매거진 설정</CardTitle>
+            <CardDescription>매거진 제목과 내용 설정</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Magazine Title</Label>
+              <Label htmlFor="title">매거진 제목</Label>
               <Input
                 id="title"
                 type="text"
-                placeholder="Monthly Radio Policy Magazine - January 2025"
+                placeholder="월간 라디오 정책 매거진 - 2025년 1월"
                 value={magazineTitle}
                 onChange={(e) => setMagazineTitle(e.target.value)}
                 disabled={isPublishing || !!publicationId}
@@ -125,14 +125,14 @@ export default function PublishPage() {
                 size="lg"
               >
                 <FileText className="mr-2 h-4 w-4" />
-                {isPublishing ? 'Generating...' : 'Generate HTML Magazine'}
+                {isPublishing ? '생성 중...' : 'HTML 매거진 생성'}
               </Button>
 
               {publicationId && (
                 <>
                   <Button variant="secondary" onClick={handleViewPreview}>
                     <Eye className="mr-2 h-4 w-4" />
-                    Preview
+                    미리보기
                   </Button>
                   {htmlPath && (
                     <Button
@@ -140,7 +140,7 @@ export default function PublishPage() {
                       onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL}${htmlPath}`, '_blank')}
                     >
                       <Download className="mr-2 h-4 w-4" />
-                      Download HTML
+                      HTML 다운로드
                     </Button>
                   )}
                 </>
@@ -150,7 +150,7 @@ export default function PublishPage() {
             {publicationId && (
               <Alert>
                 <AlertDescription className="text-green-600">
-                  Magazine generated successfully! Publication ID: {publicationId}
+                  매거진이 성공적으로 생성되었습니다! 발행 ID: {publicationId}
                 </AlertDescription>
               </Alert>
             )}
@@ -175,12 +175,12 @@ export default function PublishPage() {
         ) : articles.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
-              <CardTitle className="mb-2">No Translated Articles</CardTitle>
+              <CardTitle className="mb-2">번역된 기사 없음</CardTitle>
               <CardDescription className="mb-4">
-                Please translate articles first before publishing a magazine.
+                매거진을 발행하기 전에 먼저 기사를 번역해주세요.
               </CardDescription>
               <Button onClick={() => router.push('/translate')}>
-                Go to Translation
+                번역으로 이동
               </Button>
             </CardContent>
           </Card>

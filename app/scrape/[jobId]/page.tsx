@@ -32,9 +32,9 @@ export default function ScrapeProgressPage({ params }: { params: Promise<{ jobId
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Scraping Progress</h1>
+            <h1 className="text-3xl font-bold tracking-tight">스크래핑 진행 상황</h1>
             <p className="text-muted-foreground mt-2">
-              Job ID: <span className="font-mono text-sm">{jobId}</span>
+              작업 ID: <span className="font-mono text-sm">{jobId}</span>
             </p>
           </div>
           <Button
@@ -42,7 +42,7 @@ export default function ScrapeProgressPage({ params }: { params: Promise<{ jobId
             onClick={() => router.push('/scrape')}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+            돌아가기
           </Button>
         </div>
 
@@ -54,10 +54,10 @@ export default function ScrapeProgressPage({ params }: { params: Promise<{ jobId
               variant="outline"
               onClick={() => router.push('/scrape')}
             >
-              Start New Scraping
+              새 스크래핑 시작
             </Button>
             <Button onClick={() => router.push('/articles')}>
-              View Articles
+              기사 보기
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -69,7 +69,7 @@ export default function ScrapeProgressPage({ params }: { params: Promise<{ jobId
               variant="outline"
               onClick={() => router.push('/scrape')}
             >
-              Try Again
+              다시 시도
             </Button>
           </div>
         )}
