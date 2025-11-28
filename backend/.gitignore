@@ -1,14 +1,20 @@
-# Environment
+# ===================
+# Environment Variables
+# ===================
 .env
 .env.local
 !.env.example
 
+# ===================
 # Database
+# ===================
 database.db
 *.db
 *.db-journal
 
+# ===================
 # Python
+# ===================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -29,29 +35,51 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.mypy_cache/
 
+# ===================
 # Testing
+# ===================
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
 
+# Test scripts (temporary)
+test_*.py
+*_test.py
+
+# Test results
+*_results.txt
+*_output.html
+*_output.md
+*_firecrawl_output.*
+debug_*.txt
+
+# ===================
 # Virtual Environment
+# ===================
 venv/
 ENV/
 env/
 
+# ===================
 # Storage
+# ===================
 storage/attachments/*
 !storage/attachments/.gitkeep
 
+# ===================
 # IDEs
+# ===================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
+# ===================
 # OS
+# ===================
 .DS_Store
 Thumbs.db
