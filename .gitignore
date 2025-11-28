@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+nul
 
 # debug
 npm-debug.log*
@@ -39,3 +40,38 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+.eggs/
+*.egg-info/
+*.egg
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Playwright MCP
+.playwright-mcp/
+
+# Test/Debug files
+*_content.txt
+*_raw.txt
+*_ko.txt
+backend/debug_content.txt
+backend/*_output.html
+backend/backend/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
