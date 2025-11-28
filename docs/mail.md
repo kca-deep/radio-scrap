@@ -19,6 +19,11 @@
  o https://www.ofcom.org.uk/consultations-and-statements?query=&SelectedTopic=67891&SelectedSubTopics=&ContentStatus=&UpdatedAfter=&UpdatedBefore=&IncludePDF=true&SortBy=Newest&NumberOfResults=27
 
 
+ 필터 사용법 : 
+
+ https://www.ofcom.org.uk/consultations-and-statements?query=&SelectedTopic=67891&SelectedSubTopics=&ContentStatus=&UpdatedAfter=2025-11-01&UpdatedBefore=2025-11-28&IncludePDF=true&SortBy=Newest&NumberOfResults=108
+
+
 
 
 

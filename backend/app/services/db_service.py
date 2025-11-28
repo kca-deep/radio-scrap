@@ -20,6 +20,43 @@ from app.utils.id_generator import generate_id
 logger = logging.getLogger(__name__)
 
 
+async def check_url_exists(url: str, session: AsyncSession) -> Optional[str]:
+    """
+    Check if an article with the given URL already exists.
+
+    Args:
+        url: URL to check
+        session: Database session
+
+    Returns:
+        Article ID if exists, None otherwise
+    """
+    stmt = select(ArticleModel.id).where(ArticleModel.url == url)
+    result = await session.execute(stmt)
+    article_id = result.scalar_one_or_none()
+    return article_id
+
+
+async def check_urls_exist(urls: list[str], session: AsyncSession) -> set[str]:
+    """
+    Check which URLs already exist in the database.
+
+    Args:
+        urls: List of URLs to check
+        session: Database session
+
+    Returns:
+        Set of URLs that already exist in database
+    """
+    if not urls:
+        return set()
+
+    stmt = select(ArticleModel.url).where(ArticleModel.url.in_(urls))
+    result = await session.execute(stmt)
+    existing_urls = {row[0] for row in result.fetchall()}
+    return existing_urls
+
+
 async def save_article(article: ArticleCreate, session: AsyncSession) -> str:
     """
     Save a new article to the database.
@@ -61,28 +98,63 @@ async def save_article(article: ArticleCreate, session: AsyncSession) -> str:
 
 async def update_article_content(
     article_id: str,
-    content: str,
-    session: AsyncSession
+    content_raw: str,
+    session: AsyncSession,
+    content_html: str | None = None
 ) -> None:
     """
-    Update article content after scraping.
+    Update article raw content after scraping (Step 1).
 
     Args:
         article_id: Article ID
-        content: Scraped markdown content
+        content_raw: Raw markdown content from Firecrawl
         session: Database session
+        content_html: Raw HTML content from Firecrawl (optional)
     """
+    values = {"content_raw": content_raw}
+    if content_html is not None:
+        values["content_html"] = content_html
+
     stmt = (
         update(ArticleModel)
         .where(ArticleModel.id == article_id)
-        .values(content=content)
+        .values(**values)
     )
 
     await session.execute(stmt)
     await session.commit()
 
-    logger.debug(f"Updated content for article {article_id}")
+    logger.debug(f"Updated content_raw for article {article_id}")
 
+
+async def update_article_extraction(
+    article_id: str,
+    content: str,
+    session: AsyncSession
+) -> None:
+    """
+    Update article with extracted/cleaned content (Step 2).
+
+    Args:
+        article_id: Article ID
+        content: Cleaned/extracted content
+        session: Database session
+    """
+    values = {
+        "content": content,
+        "status": StatusEnum.EXTRACTED
+    }
+
+    stmt = (
+        update(ArticleModel)
+        .where(ArticleModel.id == article_id)
+        .values(**values)
+    )
+
+    await session.execute(stmt)
+    await session.commit()
+
+    logger.info(f"Updated extraction for article {article_id}")
 
 async def save_attachments(
     article_id: str,
@@ -301,6 +373,7 @@ async def get_article_by_id(article_id: str, session: AsyncSession) -> Optional[
         url=article_model.url,
         title=article_model.title,
         title_ko=article_model.title_ko,
+        content_raw=article_model.content_raw,
         content=article_model.content,
         content_ko=article_model.content_ko,
         source=article_model.source,
@@ -310,4 +383,169 @@ async def get_article_by_id(article_id: str, session: AsyncSession) -> Optional[
         scraped_at=article_model.scraped_at,
         translated_at=article_model.translated_at,
         attachments=attachments
+    )
+
+
+async def update_article_translation(
+    article_id: str,
+    title_ko: str,
+    content_ko: str,
+    session: AsyncSession
+) -> None:
+    """
+    Update article with translation results (Step 3).
+
+    Args:
+        article_id: Article ID
+        title_ko: Translated Korean title
+        content_ko: Translated Korean content
+        session: Database session
+    """
+    values = {
+        "title_ko": title_ko,
+        "content_ko": content_ko,
+        "status": StatusEnum.TRANSLATED,
+        "translated_at": datetime.utcnow()
+    }
+
+    stmt = (
+        update(ArticleModel)
+        .where(ArticleModel.id == article_id)
+        .values(**values)
+    )
+
+    await session.execute(stmt)
+    await session.commit()
+
+    logger.info(f"Updated translation for article {article_id}")
+
+
+async def get_articles_for_extraction(
+    session: AsyncSession,
+    limit: int = 10
+) -> list[Article]:
+    """
+    Get articles that need extraction (status=scraped, has content_raw).
+
+    Args:
+        session: Database session
+        limit: Maximum number of articles to return
+
+    Returns:
+        List of Article objects
+    """
+    stmt = (
+        select(ArticleModel)
+        .where(ArticleModel.status == StatusEnum.SCRAPED)
+        .where(ArticleModel.content_raw.isnot(None))
+        .order_by(ArticleModel.scraped_at.desc())
+        .limit(limit)
+    )
+
+    result = await session.execute(stmt)
+    article_models = result.scalars().all()
+
+    articles = []
+    for article_model in article_models:
+        articles.append(Article(
+            id=article_model.id,
+            url=article_model.url,
+            title=article_model.title,
+            title_ko=article_model.title_ko,
+            content=article_model.content,
+            content_ko=article_model.content_ko,
+            content_raw=article_model.content_raw,
+            source=article_model.source,
+            country_code=article_model.country_code,
+            published_date=article_model.published_date,
+            status=article_model.status,
+            scraped_at=article_model.scraped_at,
+            translated_at=article_model.translated_at,
+            attachments=[]
+        ))
+
+    return articles
+
+
+async def get_articles_for_translation(
+    session: AsyncSession,
+    limit: int = 10
+) -> list[Article]:
+    """
+    Get articles that need translation (status=extracted, has content).
+
+    Args:
+        session: Database session
+        limit: Maximum number of articles to return
+
+    Returns:
+        List of Article objects
+    """
+    stmt = (
+        select(ArticleModel)
+        .where(ArticleModel.status == StatusEnum.EXTRACTED)
+        .where(ArticleModel.content.isnot(None))
+        .order_by(ArticleModel.scraped_at.desc())
+        .limit(limit)
+    )
+
+    result = await session.execute(stmt)
+    article_models = result.scalars().all()
+
+    articles = []
+    for article_model in article_models:
+        articles.append(Article(
+            id=article_model.id,
+            url=article_model.url,
+            title=article_model.title,
+            title_ko=article_model.title_ko,
+            content_raw=article_model.content_raw,
+            content=article_model.content,
+            content_ko=article_model.content_ko,
+            source=article_model.source,
+            country_code=article_model.country_code,
+            published_date=article_model.published_date,
+            status=article_model.status,
+            scraped_at=article_model.scraped_at,
+            translated_at=article_model.translated_at,
+            attachments=[]
+        ))
+
+    return articles
+
+
+async def get_attachment_by_id(
+    attachment_id: int,
+    session: AsyncSession
+) -> Optional[Attachment]:
+    """
+    Get a single attachment by ID.
+
+    Args:
+        attachment_id: Attachment ID
+        session: Database session
+
+    Returns:
+        Attachment object if found, None otherwise
+
+    Examples:
+        >>> async with get_db() as session:
+        ...     attachment = await get_attachment_by_id(1, session)
+        ...     if attachment:
+        ...         print(attachment.filename)
+    """
+    stmt = select(AttachmentModel).where(AttachmentModel.id == attachment_id)
+    result = await session.execute(stmt)
+    attachment_model = result.scalar_one_or_none()
+
+    if not attachment_model:
+        return None
+
+    return Attachment(
+        id=attachment_model.id,
+        article_id=attachment_model.article_id,
+        filename=attachment_model.filename,
+        file_path=attachment_model.file_path,
+        file_url=attachment_model.file_url,
+        downloaded_at=attachment_model.downloaded_at
     )

@@ -1,4 +1,14 @@
-import { API_URL, ScrapeUploadResponse, ScrapeJob, Article, ArticleFilters, Publication } from './types';
+import {
+  API_URL,
+  ScrapeUploadResponse,
+  ScrapeJob,
+  Article,
+  ArticleFilters,
+  AutoCollectRequest,
+  AutoCollectStartRequest,
+  AutoCollectPreviewResponse,
+  AutoCollectStartResponse,
+} from './types';
 
 // Error handling helper
 async function handleResponse<T>(response: Response): Promise<T> {
@@ -38,6 +48,30 @@ export async function startScraping(jobId: string): Promise<void> {
 export async function getScrapeStatus(jobId: string): Promise<ScrapeJob> {
   const response = await fetch(`${API_URL}/api/scrape/status/${jobId}`);
   return handleResponse<ScrapeJob>(response);
+}
+
+// ============================================
+// Auto-Collect API
+// ============================================
+
+export async function previewAutoCollect(request: AutoCollectRequest): Promise<AutoCollectPreviewResponse> {
+  const response = await fetch(`${API_URL}/api/scrape/auto-collect/preview`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+
+  return handleResponse<AutoCollectPreviewResponse>(response);
+}
+
+export async function startAutoCollect(request: AutoCollectStartRequest): Promise<AutoCollectStartResponse> {
+  const response = await fetch(`${API_URL}/api/scrape/auto-collect/start`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+
+  return handleResponse<AutoCollectStartResponse>(response);
 }
 
 // ============================================
@@ -106,39 +140,3 @@ export async function startTranslation(articleIds: string[]): Promise<{ job_id: 
   return handleResponse<{ job_id: string }>(response);
 }
 
-// ============================================
-// Publishing API
-// ============================================
-
-export async function publishHTML(title: string, articleIds: string[]): Promise<Publication> {
-  const response = await fetch(`${API_URL}/api/publish/html`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, article_ids: articleIds }),
-  });
-
-  return handleResponse<Publication>(response);
-}
-
-export async function sendEmail(
-  publicationId: string,
-  recipients: string[],
-  subject: string
-): Promise<void> {
-  const response = await fetch(`${API_URL}/api/publish/email`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      publication_id: publicationId,
-      recipients,
-      subject,
-    }),
-  });
-
-  await handleResponse(response);
-}
-
-export async function getPublication(id: string): Promise<Publication> {
-  const response = await fetch(`${API_URL}/api/publish/${id}`);
-  return handleResponse<Publication>(response);
-}

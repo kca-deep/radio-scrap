@@ -205,7 +205,7 @@ async def get_scrape_status(
 
 
 @router.get("/stream/{job_id}")
-async def stream_scrape_progress(job_id: str):
+async def stream_scrape_progress(job_id: str, db: AsyncSession = Depends(get_db)):
     """
     Stream scraping progress via Server-Sent Events (SSE).
 
@@ -219,14 +219,49 @@ async def stream_scrape_progress(job_id: str):
     Event format:
         data: {"processed": 5, "total": 10, "current_url": "...", "status": "success"}
     """
+    from app.services.sse_service import is_job_completed
+
+    # Check if job already completed before starting stream
+    job = await get_scrape_job(job_id, db)
+    if not job:
+        async def not_found_generator():
+            error_event = {'status': 'error', 'error': f'Job not found: {job_id}'}
+            yield f"data: {json.dumps(error_event)}\n\n"
+        return StreamingResponse(
+            not_found_generator(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"}
+        )
+
+    # If job already completed, send completion event immediately
+    if job.status in ('completed', 'failed'):
+        async def completed_generator():
+            completed_event = {
+                'status': job.status,
+                'total': job.total_urls,
+                'processed': job.processed_urls,
+                'success_count': job.processed_urls if job.status == 'completed' else 0,
+                'error_count': 0 if job.status == 'completed' else job.total_urls - job.processed_urls
+            }
+            yield f"data: {json.dumps(completed_event)}\n\n"
+        return StreamingResponse(
+            completed_generator(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"}
+        )
+
     async def event_generator():
         """Generate SSE events."""
+        max_idle_count = 60  # Max 60 seconds of no events before checking DB
+        idle_count = 0
+
         try:
             while True:
                 # Get new events from queue
                 events = await get_sse_events(job_id)
 
                 if events:
+                    idle_count = 0  # Reset idle counter
                     for event in events:
                         # Format as SSE
                         yield f"data: {json.dumps(event)}\n\n"
@@ -235,6 +270,43 @@ async def stream_scrape_progress(job_id: str):
                         if event.get('status') in ('completed', 'failed'):
                             logger.info(f"SSE stream completed for job {job_id}")
                             return
+                else:
+                    idle_count += 1
+
+                    # Check if job already completed (in case events were lost)
+                    if idle_count >= 5 and is_job_completed(job_id):
+                        logger.info(f"Job {job_id} already completed, ending SSE stream")
+                        # Fetch final status from DB
+                        from app.database import AsyncSessionLocal
+                        async with AsyncSessionLocal() as session:
+                            final_job = await get_scrape_job(job_id, session)
+                            if final_job and final_job.status in ('completed', 'failed'):
+                                completed_event = {
+                                    'status': final_job.status,
+                                    'total': final_job.total_urls,
+                                    'processed': final_job.processed_urls,
+                                    'success_count': final_job.processed_urls if final_job.status == 'completed' else 0,
+                                    'error_count': 0 if final_job.status == 'completed' else final_job.total_urls - final_job.processed_urls
+                                }
+                                yield f"data: {json.dumps(completed_event)}\n\n"
+                        return
+
+                    # Safety timeout - if no events for too long, check DB status
+                    if idle_count >= max_idle_count:
+                        logger.warning(f"SSE stream idle timeout for job {job_id}, checking DB status")
+                        from app.database import AsyncSessionLocal
+                        async with AsyncSessionLocal() as session:
+                            check_job = await get_scrape_job(job_id, session)
+                            if check_job and check_job.status in ('completed', 'failed'):
+                                completed_event = {
+                                    'status': check_job.status,
+                                    'total': check_job.total_urls,
+                                    'processed': check_job.processed_urls,
+                                    'success_count': check_job.processed_urls if check_job.status == 'completed' else 0,
+                                    'error_count': 0 if check_job.status == 'completed' else check_job.total_urls - check_job.processed_urls
+                                }
+                                yield f"data: {json.dumps(completed_event)}\n\n"
+                                return
 
                 # Wait before checking for new events
                 await asyncio.sleep(1)

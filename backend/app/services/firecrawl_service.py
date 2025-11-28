@@ -5,6 +5,7 @@ Handles URL scraping, attachment extraction, and file downloads.
 import asyncio
 import logging
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urljoin, urlparse
@@ -25,6 +26,12 @@ logger = logging.getLogger(__name__)
 # Firecrawl API configuration
 FIRECRAWL_API_URL = "https://api.firecrawl.dev/v1"
 FIRECRAWL_TIMEOUT = 60.0  # seconds
+FIRECRAWL_TIMEOUT_CLOUDFLARE = 180.0  # seconds (for Cloudflare-protected sites)
+
+# Cloudflare-protected domains that need special handling
+CLOUDFLARE_PROTECTED_DOMAINS = [
+    "ofcom.org.uk",
+]
 
 # Attachment file extensions
 ATTACHMENT_EXTENSIONS = {
@@ -70,6 +77,105 @@ def sanitize_filename(filename: str) -> str:
     return filename if filename else 'unnamed_file'
 
 
+def sanitize_folder_name(name: str) -> str:
+    """
+    Sanitize folder name for filesystem compatibility.
+    Preserves Unicode characters (Korean, Japanese, etc.) but removes
+    filesystem-invalid characters.
+
+    Args:
+        name: Original folder name
+
+    Returns:
+        Sanitized folder name safe for filesystem
+
+    Examples:
+        >>> sanitize_folder_name("FCC/News")
+        'FCC_News'
+        >>> sanitize_folder_name("SOUMU")
+        'SOUMU'
+    """
+    if not name:
+        return "UNKNOWN"
+
+    # Replace filesystem-invalid characters with underscore
+    # Windows invalid chars: < > : " / \ | ? *
+    sanitized = re.sub(r'[<>:"/\\|?*]', '_', name)
+
+    # Replace multiple underscores with single
+    sanitized = re.sub(r'_+', '_', sanitized)
+
+    # Remove leading/trailing underscores and spaces
+    sanitized = sanitized.strip('_ ')
+
+    # Limit length to 50 chars for folder names
+    if len(sanitized) > 50:
+        sanitized = sanitized[:50].rstrip('_ ')
+
+    return sanitized if sanitized else "UNKNOWN"
+
+
+def build_attachment_path(
+    base_dir: str | Path,
+    article_id: str,
+    country_code: Optional[str] = None,
+    source: Optional[str] = None,
+    published_date: Optional[datetime] = None
+) -> Path:
+    """
+    Build hierarchical attachment storage path.
+
+    Structure: {base_dir}/{country_code}/{source}/{YYYY-MM}/{article_id}/
+
+    Args:
+        base_dir: Base attachment directory
+        article_id: Article UUID
+        country_code: Country code (US, UK, JP, KR)
+        source: Source organization name
+        published_date: Article publication date
+
+    Returns:
+        Path object for the attachment directory
+
+    Examples:
+        >>> build_attachment_path(
+        ...     "./storage/attachments",
+        ...     "abc-123",
+        ...     "US",
+        ...     "FCC",
+        ...     datetime(2024, 1, 15)
+        ... )
+        PosixPath('storage/attachments/US/FCC/2024-01/abc-123')
+    """
+    base = Path(base_dir)
+
+    # Handle None values
+    country = sanitize_folder_name(country_code) if country_code else "UNKNOWN"
+    src = sanitize_folder_name(source) if source else "UNKNOWN"
+
+    # Format date as YYYY-MM
+    if published_date:
+        if isinstance(published_date, datetime):
+            date_folder = published_date.strftime("%Y-%m")
+        else:
+            # Handle date object
+            date_folder = published_date.strftime("%Y-%m")
+    else:
+        date_folder = "NO_DATE"
+
+    # Build path: base/country/source/YYYY-MM/article_id
+    attachment_path = base / country / src / date_folder / article_id
+
+    return attachment_path
+
+
+def _is_cloudflare_protected(url: str) -> bool:
+    """Check if URL belongs to a Cloudflare-protected domain."""
+    parsed = urlparse(url)
+    domain = parsed.netloc.lower()
+    return any(cf_domain in domain for cf_domain in CLOUDFLARE_PROTECTED_DOMAINS)
+
+
 @retry(
     retry=retry_if_exception_type((httpx.TimeoutException, httpx.HTTPStatusError)),
     stop=stop_after_attempt(3),
@@ -100,23 +206,41 @@ async def scrape_url(url: str) -> dict:
         '# Example Domain\\n\\nThis domain is for use in illustrative...'
     """
     async with _scrape_semaphore:
-        logger.info(f"Scraping URL: {url}")
+        # Check if URL needs Cloudflare-specific handling
+        is_cloudflare = _is_cloudflare_protected(url)
+        timeout = FIRECRAWL_TIMEOUT_CLOUDFLARE if is_cloudflare else FIRECRAWL_TIMEOUT
+
+        if is_cloudflare:
+            logger.info(f"Scraping URL (Cloudflare mode): {url}")
+        else:
+            logger.info(f"Scraping URL: {url}")
 
         transport = httpx.AsyncHTTPTransport(retries=1)
         async with httpx.AsyncClient(
             transport=transport,
-            timeout=FIRECRAWL_TIMEOUT
+            timeout=timeout
         ) as client:
             headers = {
                 "Authorization": f"Bearer {settings.FIRECRAWL_API_KEY}",
                 "Content-Type": "application/json"
             }
 
-            payload = {
-                "url": url,
-                "formats": ["markdown", "html"],
-                "onlyMainContent": True
-            }
+            # Use different payload for Cloudflare-protected sites
+            if is_cloudflare:
+                payload = {
+                    "url": url,
+                    "formats": ["markdown", "html"],
+                    "onlyMainContent": False,
+                    "waitFor": 5000,
+                    "timeout": 90000,
+                    "mobile": False,
+                }
+            else:
+                payload = {
+                    "url": url,
+                    "formats": ["markdown", "html"],
+                    "onlyMainContent": True
+                }
 
             try:
                 response = await client.post(
@@ -229,13 +353,26 @@ async def extract_attachment_links(html: str, base_url: str) -> list[dict]:
     return unique_attachments
 
 
-async def download_attachment(url: str, save_dir: str | Path) -> dict:
+async def download_attachment(
+    url: str,
+    base_dir: str | Path,
+    article_id: str,
+    country_code: Optional[str] = None,
+    source: Optional[str] = None,
+    published_date: Optional[datetime] = None
+) -> dict:
     """
-    Download attachment file from URL.
+    Download attachment file from URL with hierarchical folder structure.
+
+    Storage structure: {base_dir}/{country_code}/{source}/{YYYY-MM}/{article_id}/
 
     Args:
         url: Attachment URL
-        save_dir: Directory to save the file
+        base_dir: Base attachment directory
+        article_id: Article UUID for folder organization
+        country_code: Country code (US, UK, JP, KR) - optional
+        source: Source organization name - optional
+        published_date: Article publication date - optional
 
     Returns:
         Dictionary with:
@@ -251,12 +388,24 @@ async def download_attachment(url: str, save_dir: str | Path) -> dict:
     Examples:
         >>> result = await download_attachment(
         ...     "https://example.com/report.pdf",
-        ...     "./storage/attachments"
+        ...     "./storage/attachments",
+        ...     "abc-123-uuid",
+        ...     country_code="US",
+        ...     source="FCC",
+        ...     published_date=datetime(2024, 1, 15)
         ... )
         >>> result['filename']
         'report.pdf'
+        >>> # Saved to: ./storage/attachments/US/FCC/2024-01/abc-123-uuid/report.pdf
     """
-    save_dir = Path(save_dir)
+    # Build hierarchical save directory
+    save_dir = build_attachment_path(
+        base_dir=base_dir,
+        article_id=article_id,
+        country_code=country_code,
+        source=source,
+        published_date=published_date
+    )
     save_dir.mkdir(parents=True, exist_ok=True)
 
     # Extract filename from URL
@@ -271,7 +420,7 @@ async def download_attachment(url: str, save_dir: str | Path) -> dict:
 
     filename = sanitize_filename(filename)
 
-    # Handle duplicate filenames
+    # Handle duplicate filenames within the same article folder
     file_path = save_dir / filename
     counter = 1
     while file_path.exists():

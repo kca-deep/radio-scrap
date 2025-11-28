@@ -51,7 +51,12 @@ async def list_articles(
         query = select(ArticleModel).options(selectinload(ArticleModel.attachments))
 
         if country_code:
-            query = query.where(ArticleModel.country_code == country_code)
+            # Support multiple country codes (comma-separated)
+            codes = [c.strip() for c in country_code.split(',') if c.strip()]
+            if len(codes) == 1:
+                query = query.where(ArticleModel.country_code == codes[0])
+            elif len(codes) > 1:
+                query = query.where(ArticleModel.country_code.in_(codes))
         if status:
             query = query.where(ArticleModel.status == status)
         if source:
@@ -96,6 +101,8 @@ async def list_articles(
                 url=article.url,
                 title=article.title,
                 title_ko=article.title_ko,
+                content=article.content,
+                content_ko=article.content_ko,
                 source=article.source,
                 country_code=article.country_code,
                 published_date=article.published_date,
@@ -192,3 +199,41 @@ async def update_article(
     except Exception as e:
         logger.error(f"Failed to update article {article_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to update article: {str(e)}")
+
+
+@router.delete("/{article_id}")
+async def delete_article(
+    article_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Delete an article by ID.
+
+    Also deletes associated attachments.
+    """
+    try:
+        # Get existing article
+        query = select(ArticleModel).where(ArticleModel.id == article_id)
+
+        result = await db.execute(query)
+        article = result.scalar_one_or_none()
+
+        if not article:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Article not found: {article_id}"
+            )
+
+        # Delete article (cascade will delete attachments)
+        await db.delete(article)
+        await db.commit()
+
+        logger.info(f"Deleted article {article_id}")
+
+        return {"message": f"Article {article_id} deleted successfully"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete article {article_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to delete article: {str(e)}")

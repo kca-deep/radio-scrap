@@ -25,8 +25,10 @@ class ArticleModel(Base):
     url: Mapped[str] = mapped_column(String(512), unique=True, nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(512), nullable=True)
     title_ko: Mapped[str] = mapped_column(String(512), nullable=True)
-    content: Mapped[str] = mapped_column(Text, nullable=True)
-    content_ko: Mapped[str] = mapped_column(Text, nullable=True)
+    content_raw: Mapped[str] = mapped_column(Text, nullable=True)  # Raw markdown from Firecrawl
+    content: Mapped[str] = mapped_column(Text, nullable=True)  # Cleaned/extracted content
+    content_ko: Mapped[str] = mapped_column(Text, nullable=True)  # Translated content
+    content_html: Mapped[str] = mapped_column(Text, nullable=True)  # Raw HTML from Firecrawl
 
     # Metadata
     source: Mapped[str] = mapped_column(String(128), nullable=True)

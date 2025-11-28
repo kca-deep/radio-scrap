@@ -3,7 +3,7 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000
 
 // Common types
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';
-export type ArticleStatus = 'scraped' | 'translated';
+export type ArticleStatus = 'scraped' | 'extracted' | 'translated';
 export type CountryCode = 'KR' | 'US' | 'UK' | 'JP';
 
 // Scraping related
@@ -28,10 +28,68 @@ export interface ScrapeProgressEvent {
   article_id?: string;
   attachments_count?: number;
   error?: string;
-  status: 'processing' | 'success' | 'error' | 'completed' | 'failed';
+  status: 'processing' | 'success' | 'error' | 'completed' | 'failed' | 'skipped';
+  step?: 'scraped' | 'extracting' | 'extracted' | 'translating';
+  skip_reason?: 'duplicate';
   success_count?: number;
+  skipped_count?: number;
   error_count?: number;
+  // Step-wise counters
+  scraped_count?: number;
+  extracted_count?: number;
+  translated_count?: number;
   completed_at?: string;
+}
+
+// Auto-collect related
+export interface ArticlePreview {
+  title: string;
+  url: string;
+  published_date?: string;
+  source: string;
+  snippet?: string;
+  document_type?: string;
+  matched_keywords?: string[];
+  is_duplicate?: boolean;
+}
+
+// Article progress tracking for scrape modal
+export type ArticleStepStatus = 'pending' | 'processing' | 'completed' | 'error';
+
+export interface ArticleProgressState {
+  url: string;
+  title: string;
+  source: string;
+  scrapeStatus: ArticleStepStatus;
+  extractStatus: ArticleStepStatus;
+  translateStatus: ArticleStepStatus;
+  overallStatus: 'pending' | 'processing' | 'completed' | 'skipped' | 'error';
+  error?: string;
+}
+
+export interface AutoCollectRequest {
+  sources: string[];
+  /** Date range filter: YYYY-MM for single month, or YYYY-MM~YYYY-MM for month range */
+  date_range: string;
+}
+
+export interface AutoCollectStartRequest {
+  selected_articles: ArticlePreview[];
+}
+
+export interface AutoCollectPreviewResponse {
+  data: {
+    fcc?: ArticlePreview[];
+    ofcom?: ArticlePreview[];
+    soumu?: ArticlePreview[];
+  };
+  warnings: string[];
+  total_count: number;
+}
+
+export interface AutoCollectStartResponse {
+  job_id: string;
+  total_urls: number;
 }
 
 // Article related
@@ -67,10 +125,8 @@ export interface ArticleFilters {
   status?: ArticleStatus;
   source?: string;
   search?: string;
-  scraped_from?: string;
-  scraped_to?: string;
-  published_from?: string;
-  published_to?: string;
+  date_from?: string;
+  date_to?: string;
 }
 
 // Translation related

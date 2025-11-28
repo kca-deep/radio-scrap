@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { API_URL } from '../types';
 
 interface UseSSEOptions<T> {
@@ -7,7 +7,7 @@ interface UseSSEOptions<T> {
   onError?: (error: string) => void;
 }
 
-export function useSSE<T extends object = any>(
+export function useSSE<T extends object = Record<string, unknown>>(
   endpoint: string | null,
   options: UseSSEOptions<T> = {}
 ) {
@@ -15,10 +15,24 @@ export function useSSE<T extends object = any>(
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { onEvent, onComplete, onError } = options;
+  // Use refs for callbacks to avoid re-creating EventSource on callback changes
+  const onEventRef = useRef(options.onEvent);
+  const onCompleteRef = useRef(options.onComplete);
+  const onErrorRef = useRef(options.onError);
+
+  // Update refs when callbacks change
+  useEffect(() => {
+    onEventRef.current = options.onEvent;
+    onCompleteRef.current = options.onComplete;
+    onErrorRef.current = options.onError;
+  }, [options.onEvent, options.onComplete, options.onError]);
 
   useEffect(() => {
     if (!endpoint) return;
+
+    // Reset events when endpoint changes
+    setEvents([]);
+    setError(null);
 
     const eventSource = new EventSource(`${API_URL}${endpoint}`);
 
@@ -32,11 +46,11 @@ export function useSSE<T extends object = any>(
         const data = JSON.parse(e.data) as T;
 
         setEvents((prev) => [...prev, data]);
-        onEvent?.(data);
+        onEventRef.current?.(data);
 
         // Check for completion
         if ('status' in data && (data.status === 'completed' || data.status === 'failed')) {
-          onComplete?.();
+          onCompleteRef.current?.();
           eventSource.close();
           setIsConnected(false);
         }
@@ -49,7 +63,7 @@ export function useSSE<T extends object = any>(
       const errorMsg = 'SSE connection error';
       setError(errorMsg);
       setIsConnected(false);
-      onError?.(errorMsg);
+      onErrorRef.current?.(errorMsg);
       eventSource.close();
     };
 
@@ -57,7 +71,7 @@ export function useSSE<T extends object = any>(
       eventSource.close();
       setIsConnected(false);
     };
-  }, [endpoint, onEvent, onComplete, onError]);
+  }, [endpoint]); // Only depend on endpoint
 
   const clearEvents = useCallback(() => {
     setEvents([]);

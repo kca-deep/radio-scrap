@@ -50,24 +50,82 @@ export default function ScrapeProgress({ events, isConnected, error }: ScrapePro
           </div>
 
           {latestEvent && (
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">처리됨</p>
-                <p className="text-2xl font-bold">{latestEvent.processed}</p>
+            <>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">처리됨</p>
+                  <p className="text-2xl font-bold">{latestEvent.processed}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">성공</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {latestEvent.success_count || successEvents.length}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">오류</p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {latestEvent.error_count || errorEvents.length}
+                  </p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">성공</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {latestEvent.success_count || successEvents.length}
-                </p>
+
+              {/* Step-wise Progress Bars */}
+              <div className="space-y-3 pt-4 border-t">
+                <p className="text-sm font-medium text-muted-foreground">단계별 진행 상황</p>
+
+                {/* Scrape Progress */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      스크랩
+                    </span>
+                    <span className="font-mono text-xs">
+                      {latestEvent.scraped_count ?? 0} / {latestEvent.total}
+                    </span>
+                  </div>
+                  <Progress
+                    value={((latestEvent.scraped_count ?? 0) / latestEvent.total) * 100}
+                    className="h-2"
+                  />
+                </div>
+
+                {/* Extract Progress */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-yellow-500" />
+                      정제
+                    </span>
+                    <span className="font-mono text-xs">
+                      {latestEvent.extracted_count ?? 0} / {latestEvent.total}
+                    </span>
+                  </div>
+                  <Progress
+                    value={((latestEvent.extracted_count ?? 0) / latestEvent.total) * 100}
+                    className="h-2"
+                  />
+                </div>
+
+                {/* Translate Progress */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-green-500" />
+                      번역
+                    </span>
+                    <span className="font-mono text-xs">
+                      {latestEvent.translated_count ?? 0} / {latestEvent.total}
+                    </span>
+                  </div>
+                  <Progress
+                    value={((latestEvent.translated_count ?? 0) / latestEvent.total) * 100}
+                    className="h-2"
+                  />
+                </div>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">오류</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {latestEvent.error_count || errorEvents.length}
-                </p>
-              </div>
-            </div>
+            </>
           )}
 
           {latestEvent?.current_url && !isCompleted && !isFailed && (
@@ -131,13 +189,31 @@ export default function ScrapeProgress({ events, isConnected, error }: ScrapePro
                   )}
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="text-xs font-medium text-muted-foreground">
                         #{events.length - idx}
                       </span>
                       {event.article_id && (
                         <Badge variant="outline" className="text-xs">
                           {event.article_id.substring(0, 8)}
+                        </Badge>
+                      )}
+                      {event.step && (
+                        <Badge
+                          variant="secondary"
+                          className={`text-xs ${
+                            event.step === 'scraped' ? 'bg-blue-100 text-blue-800' :
+                            event.step === 'extracting' ? 'bg-yellow-100 text-yellow-800' :
+                            event.step === 'extracted' ? 'bg-yellow-100 text-yellow-800' :
+                            event.step === 'translating' ? 'bg-green-100 text-green-800' :
+                            ''
+                          }`}
+                        >
+                          {event.step === 'scraped' ? '스크랩 완료' :
+                           event.step === 'extracting' ? '정제 중' :
+                           event.step === 'extracted' ? '정제 완료' :
+                           event.step === 'translating' ? '번역 중' :
+                           event.step}
                         </Badge>
                       )}
                     </div>

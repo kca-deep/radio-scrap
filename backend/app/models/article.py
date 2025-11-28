@@ -37,7 +37,8 @@ class Article(ArticleBase):
     """Schema for article response with full details."""
     id: str = Field(..., description="Article UUID")
     title_ko: str | None = Field(None, description="Translated title")
-    content: str | None = Field(None, description="Original content")
+    content_raw: str | None = Field(None, description="Raw content from Firecrawl")
+    content: str | None = Field(None, description="Cleaned/extracted content")
     content_ko: str | None = Field(None, description="Translated content")
     status: StatusEnum = Field(..., description="Processing status")
     scraped_at: datetime = Field(..., description="Scrape timestamp")
@@ -53,6 +54,8 @@ class ArticleList(BaseModel):
     url: str
     title: str | None
     title_ko: str | None
+    content: str | None = None
+    content_ko: str | None = None
     source: str | None
     country_code: CountryCodeEnum | None
     published_date: date | None

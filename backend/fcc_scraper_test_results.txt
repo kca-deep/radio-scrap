@@ -1,76 +1,76 @@
 FCC Headlines Scraper Test Results
 ================================================================================
 
-Test Date: 2025-11-13 20:28:16
+Test Date: 2025-11-26 09:01:50
 Total Articles Found: 10
 
 Article 1
+--------------------------------------------------------------------------------
+Title: FCC Proposes Upper C-Band Rules for 2027 Auction
+URL: https://www.fcc.gov/document/fcc-proposes-upper-c-band-rules-2027-auction-0
+Date: November 21, 2025Notice of Proposed RulemakingFCC Proposes Upper C-Band Rules for 2027 AuctionRelated Materials >
+Type: November 21, 2025Notice of Proposed RulemakingFCC Proposes Upper C-Band Rules for 2027 AuctionRelated Materials >
+
+Article 2
+--------------------------------------------------------------------------------
+Title: FCC Announces Revised Filing Deadlines
+URL: https://www.fcc.gov/document/fcc-announces-revised-filing-deadlines
+Date: November 17, 2025Public NoticeFCC Announces Revised Filing Deadlines
+Type: November 17, 2025Public NoticeFCC Announces Revised Filing Deadlines
+
+Article 3
 --------------------------------------------------------------------------------
 Title: FCC Takes Aim at Contraband Cellphones in State and Local Prisons
 URL: https://www.fcc.gov/document/fcc-takes-aim-contraband-cellphones-state-and-local-prisons-0
 Date: September 30, 2025FNPRMFCC Takes Aim at Contraband Cellphones in State and Local PrisonsRelated Materials >
 Type: September 30, 2025FNPRMFCC Takes Aim at Contraband Cellphones in State and Local PrisonsRelated Materials >
 
-Article 2
+Article 4
 --------------------------------------------------------------------------------
 Title: FCC Aims to Accelerate Wireless Infrastructure Buildout
 URL: https://www.fcc.gov/document/fcc-aims-accelerate-wireless-infrastructure-buildout-0
 Date: September 30, 2025Notice of Proposed RulemakingFCC Aims to Accelerate Wireless Infrastructure BuildoutRelated Materials >
 Type: September 30, 2025Notice of Proposed RulemakingFCC Aims to Accelerate Wireless Infrastructure BuildoutRelated Materials >
 
-Article 3
+Article 5
 --------------------------------------------------------------------------------
 Title: FCC Further Refines Alaska High-Cost Mobile-Support Programs
 URL: https://www.fcc.gov/document/fcc-further-refines-alaska-high-cost-mobile-support-programs
 Date: September 26, 2025OrderOrder on ReconsiderationFCC Further Refines Alaska High-Cost Mobile-Support ProgramsRelated Materials >
 Type: September 26, 2025OrderOrder on ReconsiderationFCC Further Refines Alaska High-Cost Mobile-Support ProgramsRelated Materials >
 
-Article 4
+Article 6
 --------------------------------------------------------------------------------
 Title: FCC Aims to Overhaul NEPA Process
 URL: https://www.fcc.gov/document/fcc-aims-overhaul-nepa-process
 Date: August 14, 2025Notice of Proposed RulemakingFCC Aims to Overhaul NEPA ProcessRelated Materials >
 Type: August 14, 2025Notice of Proposed RulemakingFCC Aims to Overhaul NEPA ProcessRelated Materials >
 
-Article 5
+Article 7
 --------------------------------------------------------------------------------
 Title: Evaluating the Deployment of Advanced Telecommunications
 URL: https://www.fcc.gov/document/evaluating-deployment-advanced-telecommunications-0
 Date: August 8, 2025Notice of InquiryEvaluating the Deployment of Advanced TelecommunicationsRelated Materials >
 Type: August 8, 2025Notice of InquiryEvaluating the Deployment of Advanced TelecommunicationsRelated Materials >
 
-Article 6
+Article 8
 --------------------------------------------------------------------------------
 Title: Chairman Carr Welcomes President Trump's LA28 Olympics EO
 URL: https://www.fcc.gov/document/chairman-carr-welcomes-president-trumps-la28-olympics-eo
 Date: August 5, 2025News ReleaseChairman Carr Welcomes President Trump's LA28 Olympics EO
 Type: August 5, 2025News ReleaseChairman Carr Welcomes President Trump's LA28 Olympics EO
 
-Article 7
+Article 9
 --------------------------------------------------------------------------------
 Title: Carr Proposes Overhaul of NEPA Process to Accelerate Builds
 URL: https://www.fcc.gov/document/carr-proposes-overhaul-nepa-process-accelerate-builds
 Date: July 16, 2025News ReleaseCarr Proposes Overhaul of NEPA Process to Accelerate Builds
 Type: July 16, 2025News ReleaseCarr Proposes Overhaul of NEPA Process to Accelerate Builds
 
-Article 8
+Article 10
 --------------------------------------------------------------------------------
 Title: FCC Completes Review of Wireless, Satellite, and Fiber Transactions
 URL: https://www.fcc.gov/document/fcc-completes-review-wireless-satellite-and-fiber-transactions
 Date: July 11, 2025News ReleaseFCC Completes Review of Wireless, Satellite, and Fiber TransactionsRelated Materials >
 Type: July 11, 2025News ReleaseFCC Completes Review of Wireless, Satellite, and Fiber TransactionsRelated Materials >
-
-Article 9
---------------------------------------------------------------------------------
-Title: FCC to Open Seventh Broadband Data Collection Window on July 1, 2025
-URL: https://www.fcc.gov/document/fcc-open-seventh-broadband-data-collection-window-july-1-2025
-Date: June 30, 2025Public NoticeFCC to Open Seventh Broadband Data Collection Window on July 1, 2025
-Type: June 30, 2025Public NoticeFCC to Open Seventh Broadband Data Collection Window on July 1, 2025
-
-Article 10
---------------------------------------------------------------------------------
-Title: FCC Seeks Out Foreign Adversary Ownership in Communications Industry
-URL: https://www.fcc.gov/document/fcc-seeks-out-foreign-adversary-ownership-communications-industry-0
-Date: May 27, 2025Notice of Proposed RulemakingFCC Seeks Out Foreign Adversary Ownership in Communications IndustryRelated Materials >
-Type: May 27, 2025Notice of Proposed RulemakingFCC Seeks Out Foreign Adversary Ownership in Communications IndustryRelated Materials >
 

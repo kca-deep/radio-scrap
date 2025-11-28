@@ -6,8 +6,9 @@ from enum import Enum
 
 class StatusEnum(str, Enum):
     """Article status."""
-    SCRAPED = "scraped"
-    TRANSLATED = "translated"
+    SCRAPED = "scraped"      # Firecrawl completed, content_raw saved
+    EXTRACTED = "extracted"  # Content cleaned/extracted, content saved
+    TRANSLATED = "translated"  # Translation completed, content_ko saved
 
 
 class JobStatusEnum(str, Enum):
