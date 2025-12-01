@@ -155,11 +155,12 @@ async def process_url_list(
                 'translated_count': translated_count
             })
 
-            # Step 4: Extract and download attachments
+            # Step 4: Extract and download attachments (skip for Ofcom - large PDFs)
             attachments_downloaded = []
             html_content = scrape_result.get('html', '')
+            skip_attachments = url_item.source and url_item.source.lower() == 'ofcom'
 
-            if html_content:
+            if html_content and not skip_attachments:
                 try:
                     attachment_links = await firecrawl_service.extract_attachment_links(
                         html_content,
@@ -397,9 +398,11 @@ async def process_single_url(
             content_html=scrape_result.get('html', '')
         )
 
-        # Step 4: Process attachments
+        # Step 4: Process attachments (skip for Ofcom - large PDFs)
         html_content = scrape_result.get('html', '')
-        if html_content:
+        skip_attachments = source and source.lower() == 'ofcom'
+
+        if html_content and not skip_attachments:
             attachment_links = await firecrawl_service.extract_attachment_links(
                 html_content,
                 url
