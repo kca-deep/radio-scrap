@@ -47,6 +47,7 @@ class Settings(BaseSettings):
 
     # App
     DEBUG: bool = True
+    DB_ECHO: bool = False  # SQL query logging (separate from DEBUG)
 
     # Auto-scraper settings
     FCC_URL: str = (

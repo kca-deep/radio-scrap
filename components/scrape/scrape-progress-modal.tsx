@@ -297,7 +297,7 @@ export default function ScrapeProgressModal({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
-        className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col"
+        className="sm:max-w-[1008px] max-h-[85vh] overflow-hidden flex flex-col"
         showCloseButton={!isProcessing}
       >
         <DialogHeader className="pb-2">
@@ -362,13 +362,13 @@ export default function ScrapeProgressModal({
         {/* Article Progress List */}
         <div className="flex-1 overflow-hidden">
           {/* Header */}
-          <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-2 px-2 py-2 text-xs font-medium text-muted-foreground border-b bg-muted/30">
+          <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 px-2 py-2 text-xs font-medium text-muted-foreground border-b bg-muted/30">
             <span>기사</span>
-            <span className="w-10 text-center">소스</span>
-            <span className="w-8 text-center">스크랩</span>
-            <span className="w-8 text-center">정제</span>
-            <span className="w-8 text-center">번역</span>
-            <span className="w-14 text-center">상태</span>
+            <span className="w-10 text-center whitespace-nowrap">소스</span>
+            <span className="w-12 text-center whitespace-nowrap">스크랩</span>
+            <span className="w-10 text-center whitespace-nowrap">정제</span>
+            <span className="w-10 text-center whitespace-nowrap">번역</span>
+            <span className="w-14 text-center whitespace-nowrap">상태</span>
           </div>
 
           <ScrollArea className="h-[320px]">
@@ -377,7 +377,7 @@ export default function ScrapeProgressModal({
                 {articleList.map((article, idx) => (
                   <div
                     key={article.url}
-                    className={`grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-2 px-2 py-2 items-center text-sm hover:bg-muted/50 transition-colors ${
+                    className={`grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-3 px-2 py-2 items-center text-sm hover:bg-muted/50 transition-colors ${
                       article.overallStatus === 'skipped' ? 'opacity-50' : ''
                     }`}
                   >
@@ -413,17 +413,17 @@ export default function ScrapeProgressModal({
                     </div>
 
                     {/* Scrape Status */}
-                    <div className="w-8 flex justify-center">
+                    <div className="w-12 flex justify-center">
                       <StepStatusIcon status={article.scrapeStatus} />
                     </div>
 
                     {/* Extract Status */}
-                    <div className="w-8 flex justify-center">
+                    <div className="w-10 flex justify-center">
                       <StepStatusIcon status={article.extractStatus} />
                     </div>
 
                     {/* Translate Status */}
-                    <div className="w-8 flex justify-center">
+                    <div className="w-10 flex justify-center">
                       <StepStatusIcon status={article.translateStatus} />
                     </div>
 

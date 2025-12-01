@@ -35,12 +35,13 @@ class OfcomScraper(BaseScraper):
     def get_source_name(self) -> str:
         return 'ofcom'
 
-    def _build_url(self, date_range: str) -> str:
+    def _build_url(self) -> str:
         """
-        Build Ofcom URL with date filter parameters.
+        Build Ofcom URL without date filter parameters.
 
-        Args:
-            date_range: Date filter (today, this-week, last-week, YYYY-MM, or 'all')
+        Date filtering is done client-side using Published date
+        to avoid missing articles that were published in the target period
+        but updated later.
 
         Returns:
             Complete URL with query parameters
@@ -52,22 +53,11 @@ class OfcomScraper(BaseScraper):
             'ContentStatus': '',
             'IncludePDF': 'true',
             'SortBy': 'Newest',
-            'NumberOfResults': str(self.OFCOM_MAX_RESULTS)
+            'NumberOfResults': str(self.OFCOM_MAX_RESULTS),
+            # No date filters - filtering done client-side by Published date
+            'UpdatedAfter': '',
+            'UpdatedBefore': ''
         }
-
-        # Add date filter if not 'all'
-        if date_range and date_range != 'all':
-            try:
-                start_date, end_date = get_date_range_boundaries(date_range)
-                params['UpdatedAfter'] = start_date.strftime('%Y-%m-%d')
-                params['UpdatedBefore'] = end_date.strftime('%Y-%m-%d')
-            except Exception as e:
-                self.log_warning(f"Failed to parse date_range '{date_range}': {e}")
-                params['UpdatedAfter'] = ''
-                params['UpdatedBefore'] = ''
-        else:
-            params['UpdatedAfter'] = ''
-            params['UpdatedBefore'] = ''
 
         return f"{self.OFCOM_BASE_URL}?{urlencode(params)}"
 
@@ -103,8 +93,8 @@ class OfcomScraper(BaseScraper):
             )
 
         try:
-            # Build URL with date filter parameters
-            target_url = self._build_url(date_range)
+            # Build URL without date filter (filtering done client-side by Published date)
+            target_url = self._build_url()
             self.log_info(f"Target URL: {target_url}")
 
             async with httpx.AsyncClient(timeout=180.0) as client:
@@ -233,8 +223,8 @@ class OfcomScraper(BaseScraper):
                         title = title_elem.get_text(strip=True)
 
                         # Extract dates
-                        published_date = None
-                        last_updated = None
+                        published_date_str = None
+                        last_updated_str = None
 
                         date_div = block.select_one('div.serach-date')
                         if date_div:
@@ -242,17 +232,21 @@ class OfcomScraper(BaseScraper):
                             for p in date_paragraphs:
                                 text = p.get_text(strip=True)
                                 if text.startswith('Published:'):
-                                    published_date = text.replace('Published:', '').strip()
+                                    published_date_str = text.replace('Published:', '').strip()
                                 if text.startswith('Last updated:'):
-                                    last_updated = text.replace('Last updated:', '').strip()
+                                    last_updated_str = text.replace('Last updated:', '').strip()
 
-                        # Use last_updated if available, otherwise published_date
-                        final_date_str = last_updated if last_updated else published_date
-                        parsed_date = parse_date_flexible(final_date_str) if final_date_str else None
+                        # Parse both dates
+                        parsed_published = parse_date_flexible(published_date_str) if published_date_str else None
+                        parsed_last_updated = parse_date_flexible(last_updated_str) if last_updated_str else None
+
+                        # Use Published date for filtering (not Last updated)
+                        # This ensures articles published in March are found even if updated later
+                        filter_date = parsed_published if parsed_published else parsed_last_updated
 
                         # Apply date filter (skip if 'all' or no date_range)
-                        if date_range and date_range != 'all' and parsed_date:
-                            if not is_date_in_range(parsed_date, date_range):
+                        if date_range and date_range != 'all' and filter_date:
+                            if not is_date_in_range(filter_date, date_range):
                                 filtered_by_date += 1
                                 continue
 
@@ -285,7 +279,8 @@ class OfcomScraper(BaseScraper):
                         article = ArticlePreview(
                             title=title,
                             url=url,
-                            published_date=format_date_for_display(parsed_date),
+                            published_date=format_date_for_display(parsed_published),
+                            last_updated=format_date_for_display(parsed_last_updated),
                             source='Ofcom',
                             snippet=snippet,
                             document_type=doc_type

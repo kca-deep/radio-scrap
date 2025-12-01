@@ -1,12 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { useEffect, useState, useMemo, useRef } from 'react';
-import Autoplay from 'embla-carousel-autoplay';
+import { useEffect, useState, useMemo } from 'react';
 import { getArticles, getArticle, getAttachmentDownloadUrl } from '@/lib/api-client';
 import { Article } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,12 +17,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group';
 import {
   Dialog,
   DialogContent,
@@ -33,6 +29,7 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Collapsible,
   CollapsibleContent,
@@ -45,13 +42,13 @@ import {
   Building2,
   Grid3X3,
   List,
-  TrendingUp,
-  ArrowRight,
+  Zap,
   FileText,
   Download,
   ChevronDown,
 } from 'lucide-react';
 import { MarkdownViewer } from '@/components/ui/markdown-viewer';
+import Marquee from 'react-fast-marquee';
 
 // Constants
 const COUNTRY_OPTIONS = [
@@ -138,11 +135,6 @@ export default function MagazinePage() {
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  // Carousel autoplay - 4 second intervals
-  const autoplayPlugin = useRef(
-    Autoplay({ delay: 4000, stopOnInteraction: true })
-  );
-
   useEffect(() => {
     fetchArticles();
   }, []);
@@ -204,7 +196,7 @@ export default function MagazinePage() {
   // Group filtered articles by month
   const groupedArticles = useMemo(() => groupByMonth(filteredArticles), [filteredArticles]);
 
-  // Get recent articles for hero carousel
+  // Get recent articles for hero ticker
   const recentArticles = useMemo(() => {
     return [...articles]
       .sort((a, b) => {
@@ -212,7 +204,7 @@ export default function MagazinePage() {
         const dateB = new Date(b.published_date || 0).getTime();
         return dateB - dateA;
       })
-      .slice(0, 5);
+      .slice(0, 10);
   }, [articles]);
 
   const handleArticleClick = async (article: Article) => {
@@ -247,234 +239,140 @@ export default function MagazinePage() {
 
   return (
     <div className="container mx-auto max-w-7xl py-6 space-y-6">
-      {/* Hero Section - Recent Trends Carousel */}
+      {/* Hero Section - News Ticker */}
       {recentArticles.length > 0 && (
-        <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-b from-muted/50 to-background animate-scale-in">
-          {/* Animated Radio Waves Background */}
-          <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-            <div className="relative">
-              {/* Radio wave circles */}
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className="absolute rounded-full border border-primary/20"
-                  style={{
-                    width: `${i * 150}px`,
-                    height: `${i * 150}px`,
-                    left: `${-i * 75}px`,
-                    top: `${-i * 75}px`,
-                    animation: `pulse-wave ${2.5 + i * 0.5}s ease-out infinite`,
-                    animationDelay: `${i * 0.4}s`,
-                  }}
-                />
-              ))}
+        <div className="relative overflow-hidden rounded-xl border bg-gradient-to-r from-muted/30 via-background to-muted/30 animate-scale-in">
+          {/* Header */}
+          <div className="flex items-center gap-3 px-4 py-2 border-b bg-muted/50">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold">Latest Updates</span>
             </div>
+            <Separator orientation="vertical" className="h-4" />
+            <span className="text-xs text-muted-foreground">
+              {recentArticles.length}건의 최신 기사
+            </span>
           </div>
 
-          {/* Animated gradient blobs */}
-          <div className="absolute inset-0">
-            <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/15 to-transparent rounded-full blur-3xl animate-blob" />
-            <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-primary/10 to-transparent rounded-full blur-3xl animate-blob animation-delay-2000" />
-          </div>
-
-          {/* Grid pattern overlay */}
-          <div
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)',
-              backgroundSize: '24px 24px',
-            }}
-          />
-
-          {/* Gradient Overlay for readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-background/30 to-background/70" />
-
-          <div className="relative">
-            {/* Carousel - Single Slide */}
-            <Carousel
-              plugins={[autoplayPlugin.current]}
-              className="w-full"
-              onMouseEnter={autoplayPlugin.current.stop}
-              onMouseLeave={autoplayPlugin.current.reset}
-              opts={{
-                align: 'center',
-                loop: true,
-              }}
-            >
-              <CarouselContent>
-                {recentArticles.map((article, index) => (
-                  <CarouselItem key={article.id} className="basis-full">
-                    <div
-                      className="cursor-pointer py-6 px-12 md:py-8 md:px-20 lg:px-24"
-                      onClick={() => handleArticleClick(article)}
+          {/* Ticker Content */}
+          <div className="py-3">
+            <Marquee speed={30} pauseOnHover gradient gradientWidth={60}>
+              {recentArticles.map((article) => (
+                <div
+                  key={article.id}
+                  className="flex items-center gap-4 px-4 py-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors shrink-0"
+                  onClick={() => handleArticleClick(article)}
+                >
+                  {/* Country Badge */}
+                  {article.country_code && (
+                    <Badge
+                      variant="outline"
+                      className={`text-xs shrink-0 ${COUNTRY_COLORS[article.country_code] || ''}`}
                     >
-                      {/* Header Row */}
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-primary/10">
-                            <TrendingUp className="h-3.5 w-3.5 text-primary" />
-                          </div>
-                          <span className="text-xs font-medium text-muted-foreground">
-                            최근 동향 {index + 1} / {recentArticles.length}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {article.country_code && (
-                            <Badge
-                              variant="secondary"
-                              className="text-xs font-medium"
-                            >
-                              {COUNTRY_NAMES[article.country_code] || article.country_code}
-                            </Badge>
-                          )}
-                          <span className="text-xs text-muted-foreground">
-                            {formatDate(article.published_date)}
-                          </span>
-                        </div>
-                      </div>
+                      {COUNTRY_NAMES[article.country_code] || article.country_code}
+                    </Badge>
+                  )}
 
-                      {/* Title - Large */}
-                      <h2 className="text-lg md:text-xl lg:text-2xl font-bold leading-tight mb-2 line-clamp-2">
-                        {article.title_ko || article.title}
-                      </h2>
+                  {/* Title */}
+                  <span className="font-medium text-sm line-clamp-1 max-w-[400px]">
+                    {article.title_ko || article.title}
+                  </span>
 
-                      {/* Content Excerpt */}
-                      <div className="text-sm text-muted-foreground line-clamp-3 mb-3 leading-relaxed overflow-hidden">
-                        <MarkdownViewer
-                          content={truncateText(article.content_ko || article.content || '', 500)}
-                          className="[&_*]:text-sm [&_p]:my-0 [&_p]:leading-relaxed [&_ul]:my-0 [&_ol]:my-0 [&_li]:leading-relaxed [&_h1]:text-sm [&_h2]:text-sm [&_h3]:text-sm [&_h4]:text-sm [&_h5]:text-sm [&_h6]:text-sm [&_h1]:font-normal [&_h2]:font-normal [&_h3]:font-normal"
-                        />
-                      </div>
-
-                      {/* Footer */}
-                      <div className="flex items-center gap-4">
-                        <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                          <Building2 className="h-3.5 w-3.5" />
-                          {article.source}
-                        </span>
-                        <Button
-                          variant="link"
-                          className="p-0 h-auto text-sm text-primary hover:text-primary/80"
-                        >
-                          자세히 보기
-                          <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-
-              {/* Navigation Buttons */}
-              <CarouselPrevious className="left-2 md:left-4 bg-background/80 backdrop-blur-sm border-0 shadow-md" />
-              <CarouselNext className="right-2 md:right-4 bg-background/80 backdrop-blur-sm border-0 shadow-md" />
-            </Carousel>
-
-            {/* Progress Indicator Dots */}
-            <div className="flex justify-center gap-1.5 pb-4">
-              {recentArticles.map((_, index) => (
-                <div
-                  key={index}
-                  className="w-1.5 h-1.5 rounded-full bg-primary/30"
-                />
+                  {/* Meta */}
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
+                    <span className="flex items-center gap-1">
+                      <Building2 className="h-3 w-3" />
+                      {article.source}
+                    </span>
+                    <span>|</span>
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {formatDate(article.published_date)}
+                    </span>
+                  </div>
+                </div>
               ))}
-            </div>
+            </Marquee>
           </div>
         </div>
       )}
 
-      {/* Search & Filter */}
-      <Card className="animate-fade-in-up opacity-0" style={{ animationDelay: '0.1s' }}>
-          <CardContent className="p-4 space-y-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="제목, 본문 검색..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+      {/* Search & Filter Bar */}
+      <div className="flex flex-wrap items-center gap-3 animate-fade-in-up opacity-0" style={{ animationDelay: '0.1s' }}>
+        {/* Search Input */}
+        <InputGroup className="w-48 h-8">
+          <InputGroupAddon>
+            <Search className="h-3.5 w-3.5" />
+          </InputGroupAddon>
+          <InputGroupInput
+            placeholder="검색..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="text-sm"
+          />
+        </InputGroup>
 
-            {/* Filters Row */}
-            <div className="flex flex-wrap items-center gap-4">
-              {/* Country Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground">국가:</span>
-                <ToggleGroup
-                  type="single"
-                  value={countryFilter}
-                  onValueChange={(value) => value && setCountryFilter(value)}
-                  className="flex-wrap"
-                >
-                  {COUNTRY_OPTIONS.map((option) => (
-                    <ToggleGroupItem
-                      key={option.value}
-                      value={option.value}
-                      size="sm"
-                      className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-                    >
-                      {option.label}
-                      <span className="ml-1 text-xs opacity-70">
-                        {countryCounts[option.value] || 0}
-                      </span>
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-              </div>
+        <Separator orientation="vertical" className="h-5 hidden sm:block" />
 
-              <Separator orientation="vertical" className="h-6 hidden sm:block" />
+        {/* Country Filter */}
+        <ToggleGroup
+          type="single"
+          value={countryFilter}
+          onValueChange={(value) => value && setCountryFilter(value)}
+          className="flex-wrap"
+        >
+          {COUNTRY_OPTIONS.map((option) => (
+            <ToggleGroupItem
+              key={option.value}
+              value={option.value}
+              size="sm"
+              className="h-8 px-2 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+            >
+              {option.label}
+              <span className="ml-1 opacity-70">{countryCounts[option.value] || 0}</span>
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
 
-              {/* Sort */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground">정렬:</span>
-                <Select value={sortOrder} onValueChange={setSortOrder}>
-                  <SelectTrigger className="w-28 h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SORT_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        <Separator orientation="vertical" className="h-5 hidden sm:block" />
 
-              <Separator orientation="vertical" className="h-6 hidden sm:block" />
+        {/* Sort */}
+        <Select value={sortOrder} onValueChange={setSortOrder}>
+          <SelectTrigger className="w-24 h-8 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-              {/* View Mode */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground">보기:</span>
-                <ToggleGroup
-                  type="single"
-                  value={viewMode}
-                  onValueChange={(value) => value && setViewMode(value as 'full' | 'compact')}
-                >
-                  <ToggleGroupItem value="full" size="sm">
-                    <Grid3X3 className="h-4 w-4 mr-1" />
-                    카드
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="compact" size="sm">
-                    <List className="h-4 w-4 mr-1" />
-                    목록
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <Separator orientation="vertical" className="h-5 hidden sm:block" />
+
+        {/* View Mode */}
+        <ToggleGroup
+          type="single"
+          value={viewMode}
+          onValueChange={(value) => value && setViewMode(value as 'full' | 'compact')}
+        >
+          <ToggleGroupItem value="full" size="sm" className="h-8 px-2">
+            <Grid3X3 className="h-3.5 w-3.5" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="compact" size="sm" className="h-8 px-2">
+            <List className="h-3.5 w-3.5" />
+          </ToggleGroupItem>
+        </ToggleGroup>
 
         {/* Results Count */}
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            검색 결과: <span className="font-semibold text-foreground">{filteredArticles.length}건</span>
-          </p>
-        </div>
+        <span className="text-xs text-muted-foreground ml-auto">
+          {filteredArticles.length}건
+        </span>
+      </div>
 
-        {/* Loading */}
+      {/* Loading */}
         {loading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
@@ -532,20 +430,24 @@ export default function MagazinePage() {
                         style={{ animationDelay: `${index * 0.1}s` }}
                         onClick={() => handleArticleClick(article)}
                       >
-                        <CardContent className="p-4 space-y-3">
-                          {/* Header */}
-                          <div className="space-y-2">
-                            <h3 className="font-semibold line-clamp-2 leading-snug">
-                              {highlightText(
-                                article.title_ko || article.title || '',
-                                searchTerm
-                              )}
-                            </h3>
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {formatDate(article.published_date)}
-                              </span>
+                        <CardContent className="py-2 px-3">
+                          {/* Korean Title */}
+                          <h3 className="font-semibold line-clamp-1 leading-snug text-sm">
+                            {highlightText(
+                              article.title_ko || article.title || '',
+                              searchTerm
+                            )}
+                          </h3>
+                          {/* Original Title */}
+                          {article.title_ko && article.title && (
+                            <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5 mb-1">
+                              {highlightText(article.title, searchTerm)}
+                            </p>
+                          )}
+
+                          {/* Meta Row */}
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <div className="flex items-center gap-2">
                               {article.country_code && (
                                 <Badge
                                   variant="outline"
@@ -554,25 +456,14 @@ export default function MagazinePage() {
                                   {COUNTRY_NAMES[article.country_code] || article.country_code}
                                 </Badge>
                               )}
+                              <span className="flex items-center gap-1">
+                                <Building2 className="h-3 w-3" />
+                                {article.source}
+                              </span>
                             </div>
-                          </div>
-
-                          {/* Excerpt */}
-                          <div className="text-sm text-muted-foreground line-clamp-3 leading-relaxed overflow-hidden">
-                            <MarkdownViewer
-                              content={truncateText(article.content_ko || article.content || '', 500)}
-                              className="[&_*]:text-sm [&_p]:my-0 [&_p]:leading-relaxed [&_ul]:my-0 [&_ol]:my-0 [&_li]:leading-relaxed [&_h1]:text-sm [&_h2]:text-sm [&_h3]:text-sm [&_h4]:text-sm [&_h5]:text-sm [&_h6]:text-sm [&_h1]:font-normal [&_h2]:font-normal [&_h3]:font-normal"
-                            />
-                          </div>
-
-                          {/* Footer */}
-                          <div className="flex items-center justify-between pt-2 border-t">
-                            <Button variant="link" className="p-0 h-auto text-sm">
-                              자세히 보기
-                            </Button>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Building2 className="h-3 w-3" />
-                              {article.source}
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {formatDate(article.published_date)}
                             </span>
                           </div>
                         </CardContent>
@@ -581,7 +472,7 @@ export default function MagazinePage() {
                   </div>
                 ) : (
                   /* Compact List View */
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     {monthArticles.map((article, index) => (
                       <Card
                         key={article.id}
@@ -589,9 +480,9 @@ export default function MagazinePage() {
                         style={{ animationDelay: `${index * 0.08}s` }}
                         onClick={() => handleArticleClick(article)}
                       >
-                        <CardContent className="p-4">
-                          {/* Header Row */}
-                          <div className="flex items-center gap-3 mb-2">
+                        <CardContent className="py-1.5 px-3">
+                          <div className="flex items-center gap-3">
+                            {/* Country Badge */}
                             {article.country_code && (
                               <Badge
                                 variant="outline"
@@ -600,26 +491,25 @@ export default function MagazinePage() {
                                 {COUNTRY_NAMES[article.country_code] || article.country_code}
                               </Badge>
                             )}
-                            <span className="text-xs text-muted-foreground shrink-0">
-                              {formatDate(article.published_date)}
-                            </span>
-                            <span className="text-xs text-muted-foreground shrink-0 hidden sm:block">
-                              {article.source}
-                            </span>
-                          </div>
-                          {/* Title */}
-                          <h3 className="font-medium line-clamp-1 mb-1">
-                            {highlightText(
-                              article.title_ko || article.title || '',
-                              searchTerm
-                            )}
-                          </h3>
-                          {/* Excerpt */}
-                          <div className="text-sm text-muted-foreground line-clamp-2 leading-relaxed overflow-hidden">
-                            <MarkdownViewer
-                              content={truncateText(article.content_ko || article.content || '', 500)}
-                              className="[&_*]:text-sm [&_p]:my-0 [&_p]:leading-relaxed [&_ul]:my-0 [&_ol]:my-0 [&_li]:leading-relaxed [&_h1]:text-sm [&_h2]:text-sm [&_h3]:text-sm [&_h4]:text-sm [&_h5]:text-sm [&_h6]:text-sm [&_h1]:font-normal [&_h2]:font-normal [&_h3]:font-normal"
-                            />
+                            {/* Titles */}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-sm line-clamp-1">
+                                {highlightText(
+                                  article.title_ko || article.title || '',
+                                  searchTerm
+                                )}
+                              </h3>
+                              {article.title_ko && article.title && (
+                                <p className="text-xs text-muted-foreground line-clamp-1">
+                                  {highlightText(article.title, searchTerm)}
+                                </p>
+                              )}
+                            </div>
+                            {/* Meta */}
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
+                              <span className="hidden sm:block">{article.source}</span>
+                              <span>{formatDate(article.published_date)}</span>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -633,23 +523,38 @@ export default function MagazinePage() {
 
       {/* Article Detail Modal */}
       <Dialog open={!!selectedArticle} onOpenChange={() => setSelectedArticle(null)}>
-        <DialogContent className="w-[95vw] sm:max-w-[1400px] h-[90vh] flex flex-col">
+        <DialogContent className="w-[95vw] sm:max-w-[1400px] h-[90vh] flex flex-col" showCloseButton={false}>
           <DialogHeader className="shrink-0">
             <div className="flex items-center gap-3">
-              <DialogTitle className="text-xl leading-snug">
-                {selectedArticle?.title_ko || selectedArticle?.title}
-              </DialogTitle>
-              {selectedArticle?.url && (
+              <div className="flex-1 min-w-0">
+                <DialogTitle className="text-xl leading-snug">
+                  {selectedArticle?.title_ko || selectedArticle?.title}
+                </DialogTitle>
+                {selectedArticle?.title_ko && selectedArticle?.title && (
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
+                    {selectedArticle.title}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {selectedArticle?.url && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(selectedArticle.url, '_blank')}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-1.5" />
+                    원문
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
-                  className="shrink-0"
-                  onClick={() => window.open(selectedArticle.url, '_blank')}
+                  onClick={() => setSelectedArticle(null)}
                 >
-                  <ExternalLink className="h-4 w-4 mr-1.5" />
-                  원문
+                  닫기
                 </Button>
-              )}
+              </div>
             </div>
             <div className="flex items-center gap-3 text-sm text-muted-foreground pt-2">
               <span className="flex items-center gap-1">
@@ -671,29 +576,60 @@ export default function MagazinePage() {
             </div>
           </DialogHeader>
 
-          {/* Content Area with Scroll */}
-          <div className="flex-1 min-h-0 mt-4 border rounded-lg bg-muted/30 overflow-hidden">
-            <ScrollArea className="h-full w-full">
-              <div className="p-6">
-                {detailLoading ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                    <Skeleton className="h-4 w-4/5" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-32 w-full mt-4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
+          {/* Content Area with Tabs */}
+          <div className="flex-1 min-h-0 mt-4 flex flex-col overflow-hidden">
+            <Tabs defaultValue={selectedArticle?.content_ko ? 'translation' : 'original'} className="flex-1 flex flex-col min-h-0">
+              <TabsList className="shrink-0 w-fit">
+                <TabsTrigger value="translation" disabled={!selectedArticle?.content_ko}>
+                  번역본
+                </TabsTrigger>
+                <TabsTrigger value="original">
+                  원문
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="translation" className="flex-1 min-h-0 mt-3 border rounded-lg bg-muted/30 overflow-hidden data-[state=inactive]:hidden">
+                <ScrollArea className="h-full">
+                  <div className="p-6">
+                    {detailLoading ? (
+                      <div className="space-y-4">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-5/6" />
+                        <Skeleton className="h-4 w-4/5" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
+                      </div>
+                    ) : (
+                      <MarkdownViewer
+                        content={selectedArticle?.content_ko || ''}
+                        className="prose prose-sm max-w-none dark:prose-invert"
+                      />
+                    )}
                   </div>
-                ) : (
-                  <MarkdownViewer
-                    content={selectedArticle?.content_ko || selectedArticle?.content || ''}
-                    className="prose prose-sm max-w-none dark:prose-invert"
-                  />
-                )}
-              </div>
-            </ScrollArea>
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="original" className="flex-1 min-h-0 mt-3 border rounded-lg bg-muted/30 overflow-hidden data-[state=inactive]:hidden">
+                <ScrollArea className="h-full">
+                  <div className="p-6">
+                    {detailLoading ? (
+                      <div className="space-y-4">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-5/6" />
+                        <Skeleton className="h-4 w-4/5" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-3/4" />
+                      </div>
+                    ) : (
+                      <MarkdownViewer
+                        content={selectedArticle?.content || ''}
+                        className="prose prose-sm max-w-none dark:prose-invert"
+                      />
+                    )}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Attachments Section - Loading Skeleton */}

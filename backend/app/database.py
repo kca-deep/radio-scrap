@@ -17,7 +17,7 @@ from app.config import settings
 # Create async engine
 engine: AsyncEngine = create_async_engine(
     settings.DATABASE_URL,
-    echo=settings.DEBUG,
+    echo=settings.DB_ECHO,
     future=True,
 )
 

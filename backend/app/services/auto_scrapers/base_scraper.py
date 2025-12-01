@@ -18,6 +18,7 @@ class ArticlePreview(BaseModel):
     title: str
     url: str
     published_date: Optional[str] = None
+    last_updated: Optional[str] = None  # Ofcom articles have separate last_updated date
     source: str
     snippet: Optional[str] = None
     document_type: Optional[str] = None

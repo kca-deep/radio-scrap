@@ -12,6 +12,11 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
   ArrowLeft,
   Download,
   FileText,
@@ -20,6 +25,7 @@ import {
   Building2,
   ExternalLink,
   Clock,
+  ChevronDown,
 } from 'lucide-react';
 import { MarkdownViewer } from '@/components/ui/markdown-viewer';
 
@@ -244,53 +250,58 @@ export default function ArticleDetailPage() {
           </Card>
 
           {/* Attachments Card */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center justify-between">
-                <span>첨부파일</span>
+          <Collapsible defaultOpen className="border rounded-lg">
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span className="text-base font-semibold">첨부파일</span>
                 <Badge variant="secondary" className="font-normal">
                   {article.attachments?.length || 0}
                 </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {article.attachments && article.attachments.length > 0 ? (
-                <ScrollArea className="max-h-[300px]">
-                  <div className="space-y-2 pr-2">
-                    {article.attachments.map((attachment) => (
-                      <div
-                        key={attachment.id}
-                        className="flex items-center gap-2 p-2 rounded-md border hover:bg-muted/50 transition-colors"
-                      >
-                        <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm truncate" title={attachment.filename}>
-                            {attachment.filename}
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 flex-shrink-0"
-                          onClick={() => {
-                            const url = getAttachmentDownloadUrl(attachment.id);
-                            window.open(url, '_blank');
-                          }}
+              </div>
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-4 pb-4">
+                {article.attachments && article.attachments.length > 0 ? (
+                  <div className="max-h-[400px] overflow-y-auto rounded-md border">
+                    <div className="space-y-1 p-2">
+                      {article.attachments.map((attachment) => (
+                        <div
+                          key={attachment.id}
+                          className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors"
                         >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                          <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm truncate" title={attachment.filename}>
+                              {attachment.filename}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 flex-shrink-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const url = getAttachmentDownloadUrl(attachment.id);
+                              window.open(url, '_blank');
+                            }}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </ScrollArea>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                  <FileText className="h-8 w-8 mb-2 opacity-50" />
-                  <p className="text-sm">첨부파일 없음</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                    <FileText className="h-8 w-8 mb-2 opacity-50" />
+                    <p className="text-sm">첨부파일 없음</p>
+                  </div>
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </div>
     </div>
